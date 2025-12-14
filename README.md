@@ -2,7 +2,7 @@
 
 > Ein adaptives Eingabesystem für Menschen mit eingeschränkter Fingermotorik
 
-![System Overview](docs/images/protoype_v1_a.png)
+![System Overview](docs/images/prototype_v1_a.png)
 
 ---
 
@@ -46,8 +46,8 @@ Das Projekt orientiert sich an professionellen Assistenzsystemen wie dem **Quads
 Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 
 ### Version 1.0 - Proof of Concept
-![Prototyp v1.0 a](docs/images/protoype_v1_a.png)
-![Prototyp v1.0 b](docs/images/protoype_v1_b.png)
+![Prototyp v1.0 a](docs/images/prototype_v1_a.png)
+![Prototyp v1.0 b](docs/images/prototype_v1_b.png)
 
 **Features:**
 - Basis-Funktionalität (Sip & Puff für Klicks)
