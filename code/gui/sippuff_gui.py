@@ -16,7 +16,7 @@ from datetime import datetime
 
 # CustomTkinter Appearance
 ctk.set_appearance_mode("system")  # "light" oder "dark"
-ctk.set_default_color_theme("blue")  # "blue", "green", "dark-blue"
+ctk.set_default_color_theme("theme_red.json")  # "blue", "green", "dark-blue"
 
 class SipPuffGUI:
     def __init__(self, root):
@@ -92,17 +92,14 @@ class SipPuffGUI:
         header = ctk.CTkFrame(self.root, corner_radius=0, fg_color="transparent")
         header.pack(fill="x", padx=20, pady=(20, 10))
         
-        title = ctk.CTkLabel(header, text="Sip & Puff Controller", 
-                            font=ctk.CTkFont(size=24, weight="bold"))
+        title = ctk.CTkLabel(header, text="Sip & Puff Controller", font=ctk.CTkFont(size=24, weight="bold"))
         title.pack(anchor="w")  # Linksbündig
         
-        subtitle = ctk.CTkLabel(header, text="Echtzeit-Konfiguration", 
-                               font=ctk.CTkFont(size=12), text_color="gray")
+        subtitle = ctk.CTkLabel(header, text="Echtzeit-Konfiguration", font=ctk.CTkFont(size=12), text_color="gray")
         subtitle.pack(anchor="w")  # Linksbündig
         
         # Scrollbarer Container (WEISS) für die einzelnen Blöcke
-        scrollable_container = ctk.CTkScrollableFrame(self.root, corner_radius=10, 
-                                                       fg_color="transparent")
+        scrollable_container = ctk.CTkScrollableFrame(self.root, corner_radius=10, fg_color="transparent")
         scrollable_container.pack(fill="both", expand=True, padx=20, pady=(0, 10))
         
         # main_frame ist jetzt der scrollbare Container
@@ -112,8 +109,7 @@ class SipPuffGUI:
         conn_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         conn_frame.pack(fill="x", pady=(0, 10))
         
-        conn_title = ctk.CTkLabel(conn_frame, text="Verbindung", 
-                                  font=ctk.CTkFont(size=16, weight="bold"))
+        conn_title = ctk.CTkLabel(conn_frame, text="Verbindung", font=ctk.CTkFont(size=16, weight="bold"))
         conn_title.grid(row=0, column=0, columnspan=4, sticky="w", padx=15, pady=(15, 10))
         
         ctk.CTkLabel(conn_frame, text="Port:").grid(row=1, column=0, sticky="w", padx=15, pady=10)
@@ -122,16 +118,13 @@ class SipPuffGUI:
         self.port_combo.grid(row=1, column=1, padx=10, pady=10)
         self.refresh_ports()
         
-        self.refresh_btn = ctk.CTkButton(conn_frame, text=self.icons['refresh'], 
-                                        command=self.refresh_ports, width=40)
+        self.refresh_btn = ctk.CTkButton(conn_frame, text=self.icons['refresh'], command=self.refresh_ports, width=40)
         self.refresh_btn.grid(row=1, column=2, padx=5, pady=10)
         
-        self.connect_btn = ctk.CTkButton(conn_frame, text="Verbinden", 
-                                        command=self.toggle_connection, width=120)
+        self.connect_btn = ctk.CTkButton(conn_frame, text="Verbinden", command=self.toggle_connection, width=120)
         self.connect_btn.grid(row=1, column=3, padx=15, pady=10)
         
-        self.status_label = ctk.CTkLabel(conn_frame, text="● Nicht verbunden", 
-                                        text_color="red", font=ctk.CTkFont(size=12, weight="bold"))
+        self.status_label = ctk.CTkLabel(conn_frame, text="● Nicht verbunden", text_color="red", font=ctk.CTkFont(size=12, weight="bold"))
         self.status_label.grid(row=2, column=0, columnspan=4, padx=15, pady=(0, 15))
         
         # Klick-Schwellwerte
@@ -142,12 +135,9 @@ class SipPuffGUI:
                                    font=ctk.CTkFont(size=16, weight="bold"))
         click_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
         
-        self.create_slider(click_frame, "Linksklick (Sip):", 'click_left', 
-                          -400, 0, 1, tooltip="Saugen: Negativer Wert für Linksklick")
-        self.create_slider(click_frame, "Doppelklick (Sip stark):", 'click_double', 
-                          -400, 0, 2, tooltip="Starkes Saugen: Noch negativer für Doppelklick")
-        self.create_slider(click_frame, "Rechtsklick (Puff):", 'click_right', 
-                          0, 400, 3, tooltip="Blasen: Positiver Wert für Rechtsklick")
+        self.create_slider(click_frame, "Linksklick (Sip):", 'click_left', -400, 0, 1, tooltip="Saugen: Negativer Wert für Linksklick")
+        self.create_slider(click_frame, "Doppelklick (Sip stark):", 'click_double', -400, 0, 2, tooltip="Stärkeres Saugen: Noch negativer für Doppelklick")
+        self.create_slider(click_frame, "Rechtsklick (Puff):", 'click_right', 0, 400, 3, tooltip="Blasen: Positiver Wert für Rechtsklick")
         
         # Spacing
         ctk.CTkLabel(click_frame, text="").grid(row=4, column=0, pady=5)
@@ -156,8 +146,7 @@ class SipPuffGUI:
         joy_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         joy_frame.pack(fill="x", pady=(0, 10))
         
-        joy_title = ctk.CTkLabel(joy_frame, text="Joystick", 
-                                font=ctk.CTkFont(size=16, weight="bold"))
+        joy_title = ctk.CTkLabel(joy_frame, text="Joystick", font=ctk.CTkFont(size=16, weight="bold"))
         joy_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
         
         # Checkbox für Joystick-Aktivierung
@@ -169,12 +158,9 @@ class SipPuffGUI:
                                              border_width=1)  # Dünner Rahmen
         self.joystick_check.grid(row=1, column=0, columnspan=3, sticky="w", padx=15, pady=10)
         
-        self.create_slider(joy_frame, "Geschwindigkeit:", 'wavelength', 
-                          5, 50, 2, tooltip="Höher = schneller")
-        self.create_slider(joy_frame, "Update-Rate (ms):", 'period', 
-                          10, 100, 3, tooltip="Kleiner = flüssiger (25-50 empfohlen)")
-        self.create_slider(joy_frame, "Deadzone:", 'deadzone', 
-                          0, 100, 4, tooltip="Bereich ohne Bewegung um Mittelposition")
+        self.create_slider(joy_frame, "Geschwindigkeit:", 'wavelength', 5, 50, 2, tooltip="Höher = schneller")
+        self.create_slider(joy_frame, "Update-Rate (ms):", 'period', 10, 100, 3, tooltip="Kleiner = flüssiger (25-50 empfohlen)")
+        self.create_slider(joy_frame, "Deadzone:", 'deadzone', 0, 100, 4, tooltip="Bereich ohne Bewegung um Mittelposition")
         
         # Spacing
         ctk.CTkLabel(joy_frame, text="").grid(row=5, column=0, pady=5)
@@ -183,12 +169,10 @@ class SipPuffGUI:
         adv_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         adv_frame.pack(fill="x", pady=(0, 10))
         
-        adv_title = ctk.CTkLabel(adv_frame, text="Erweitert", 
-                                font=ctk.CTkFont(size=16, weight="bold"))
+        adv_title = ctk.CTkLabel(adv_frame, text="Erweitert", font=ctk.CTkFont(size=16, weight="bold"))
         adv_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
         
-        self.create_slider(adv_frame, "Debounce (ms):", 'debounce', 
-                          100, 1000, 1, tooltip="Mindestzeit zwischen Klicks")
+        self.create_slider(adv_frame, "Debounce (ms):", 'debounce', 100, 1000, 1, tooltip="Mindestzeit zwischen Klicks")
         
         # Spacing
         ctk.CTkLabel(adv_frame, text="").grid(row=2, column=0, pady=5)
@@ -197,8 +181,7 @@ class SipPuffGUI:
         log_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         log_frame.pack(fill="both", expand=True, pady=(0, 10))
         
-        log_title = ctk.CTkLabel(log_frame, text="Aktionen & Status", 
-                                font=ctk.CTkFont(size=16, weight="bold"))
+        log_title = ctk.CTkLabel(log_frame, text="Aktionen & Status", font=ctk.CTkFont(size=16, weight="bold"))
         log_title.pack(anchor="w", padx=15, pady=(15, 10))
         
         self.log_text = ctk.CTkTextbox(log_frame, height=120, font=ctk.CTkFont(size=11))
@@ -232,8 +215,7 @@ class SipPuffGUI:
         # Slider mit angepassten Farben
         slider = ctk.CTkSlider(parent, from_=from_, to=to, 
                               variable=value_var, width=300,
-                              command=lambda v: self.on_slider_change(key, v),
-                              progress_color="#1f538d")  # Gleiche Farbe wie Button
+                              command=lambda v: self.on_slider_change(key, v))
         slider.grid(row=row, column=1, padx=10, pady=8)
         
         # Editierbares Entry-Feld
