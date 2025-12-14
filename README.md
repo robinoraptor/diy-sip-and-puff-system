@@ -2,8 +2,7 @@
 
 > Ein adaptives Eingabesystem für Menschen mit eingeschränkter Fingermotorik
 
-![System Overview](docs/images/system_overview.jpg)
-*Platzhalter: Gesamtansicht des aufgebauten Systems*
+![System Overview](docs/images/protoype_v1_a.jpg)
 
 ---
 
@@ -47,34 +46,23 @@ Das Projekt orientiert sich an professionellen Assistenzsystemen wie dem **Quads
 Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 
 ### Version 1.0 - Proof of Concept
-![Prototyp v1.0](docs/images/prototype_v1.jpg)
-*Platzhalter: Erster Prototyp auf Breadboard*
+![Prototyp v1.0 a](docs/images/protoype_v1_a.jpg)
+![Prototyp v1.0 b](docs/images/protoype_v1_b.jpg)
 
 **Features:**
 - Basis-Funktionalität (Sip & Puff für Klicks)
-- Breadboard-Aufbau
+- Joystick für 2D-Mausbewegung
+- Lötverbindung der Komponenten
 - Einfacher Arduino-Code
 
 **Erkenntnisse:**
 - Drucksensor-Kalibrierung essentiell
 - Schwellwerte müssen anpassbar sein
-
-### Version 2.0 - Joystick Integration
-![Prototyp v2.0](docs/images/prototype_v2.jpg)
-*Platzhalter: Zweiter Prototyp mit Joystick*
-
-**Features:**
-- Joystick für 2D-Mausbewegung
-- Verbesserte Kalibrierung
-- Erste GUI-Tests
-
-**Erkenntnisse:**
 - Deadzone notwendig für präzise Steuerung
 - Geschwindigkeitsanpassung wichtig
 
-### Version 3.0 - GUI-gesteuert
-![Prototyp v3.0](docs/images/prototype_v3.jpg)
-*Platzhalter: Finaler Prototyp mit GUI*
+### Version 2.0 - GUI-gesteuert
+![Prototyp v3.0](docs/images/gui_v1.png)
 
 **Features:**
 - Vollständige GUI-Integration
@@ -85,21 +73,6 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 **Erkenntnisse:**
 - Live-Anpassung drastisch verbessert Nutzbarkeit
 - Individuelle Profile essentiell
-
-### Version 4.0 - Produktionsreif (aktuell)
-![Prototyp v4.0](docs/images/prototype_v4.jpg)
-*Platzhalter: Aktueller Stand mit optimierter Hardware*
-
-**Features:**
-- Optimierte Hardware-Anordnung
-- Stabilere Verkabelung
-- Verbessertes Gehäuse-Konzept
-- Umfassende Dokumentation
-
-**Nächste Schritte:**
-- 3D-gedrucktes Gehäuse
-- Wireless-Option (Bluetooth)
-- Profile-System
 
 ---
 
@@ -119,8 +92,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 - ✅ **Adaptive Schwellwerte** (-400 bis +400)
 - ✅ **Joystick aktivierbar/deaktivierbar**
 
-![GUI Screenshot](docs/images/gui_screenshot.png)
-*Platzhalter: Screenshot der Konfigurations-GUI*
+![GUI Screenshot](docs/images/gui_v1.png)
 
 ---
 
@@ -128,17 +100,16 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 
 | Komponente | Typ | Funktion | Ungefähre Kosten | Link |
 |------------|-----|----------|------------------|------|
-| Arduino Pro Micro | ATmega32U4 | Mikrocontroller mit nativer USB-HID-Unterstützung | 8,59 € | https://www.amazon.de/EntwicklungBoards-Binghe-Mikrocontroller-Entwicklungsboard-Selbst-USB-Updater/dp/B0D69JLJ97/ref=sr_1_1_pp?crid=3FBKSPF7ND7OH&dib=eyJ2IjoiMSJ9.m9zoZdlvH_p8LU9pMV4IJOJ5KPBbrCMNkZKKCmBEfpgtMUrJUq3ggsoOKdUmjuCV-_4V8o2hM9JqLgg1LsCxJrqLudyg19aJPjiBQp9CXK9PtmK0OKS_Sbb1JXT7yrYkMQuxoDDsUkRYc62Lx7b0D6K2BUTU9blUNgKt7_nZxJ8fxKc4lztovX7qqiIkRWlJ1ZIY5JQ4TXoqx5tw3sI0ED9u32NgMS9CbSdakyHV2js.hyoTs0gNzm_DUlIygOJR_kxBFjo83G-4MAdEWQnrUYg&dib_tag=se&keywords=arduino+pro+micro&qid=1765627500&sprefix=arduino+pro+%2Caps%2C114&sr=8-1
-| MPXV7002DP | Drucksensor | Bidirektionaler Differenzdrucksensor (±2 kPa) | ~15-20 € |
-| Analoger Joystick | 2-Achsen | XY-Achsen für Mausbewegung | ~2-5 € |
-| Kippschalter | SPST | Optional: Joystick-Aktivierung | ~1 € |
-| Taster | Momentary | Reset-Button | ~0,50 € |
-| Schlauch + Mundstück | Medizinisch | Für Sip & Puff Eingabe | ~5-10 € |
-| Diverse | Kabel, Breadboard, Gehäuse | Verkabelung und Montage | ~5-10 € |
+| Arduino Pro Micro | ATmega32U4 | Mikrocontroller mit nativer USB-HID-Unterstützung | ~8 € | https://www.amazon.de/EntwicklungBoards-Binghe-Mikrocontroller-Entwicklungsboard-Selbst-USB-Updater/dp/B0D69JLJ97/ref=sr_1_1_pp?crid=3FBKSPF7ND7OH&dib=eyJ2IjoiMSJ9.m9zoZdlvH_p8LU9pMV4IJOJ5KPBbrCMNkZKKCmBEfpgtMUrJUq3ggsoOKdUmjuCV-_4V8o2hM9JqLgg1LsCxJrqLudyg19aJPjiBQp9CXK9PtmK0OKS_Sbb1JXT7yrYkMQuxoDDsUkRYc62Lx7b0D6K2BUTU9blUNgKt7_nZxJ8fxKc4lztovX7qqiIkRWlJ1ZIY5JQ4TXoqx5tw3sI0ED9u32NgMS9CbSdakyHV2js.hyoTs0gNzm_DUlIygOJR_kxBFjo83G-4MAdEWQnrUYg&dib_tag=se&keywords=arduino+pro+micro&qid=1765627500&sprefix=arduino+pro+%2Caps%2C114&sr=8-1 |
+| MPXV7002DP | Drucksensor | Bidirektionaler Differenzdrucksensor (±2 kPa) | ~24 € | https://www.amazon.de/dp/B08D6JDJ4D?ref=ppx_yo2ov_dt_b_fed_asin_title |
+| Analoger Joystick | 2-Achsen | XY-Achsen für Mausbewegung | ~1 € | https://www.roboter-bausatz.de/p/joystick-modul-2-achsen |
+| Schlauch 2.5mm ID x 4mm OD x 1m | Silikon (Lebensmittelecht) | Für Sip & Puff Eingabe | ~4 € | https://www.amazon.de/dp/B0BZXR88VD?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1 |
+| Schlauch 3mm ID x 6mm OD x 1.5m | Silikon (Lebensmittelecht) | Für Sip & Puff Eingabe | ~5 € | https://www.amazon.de/dp/B0CXPW74GZ?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1 |
+| PTFE Filter | Hydrophob | Hygiene & Schutz gegen Flüssigkeit | ~14 € | https://www.amazon.de/dp/B07KWW7ZXF?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1 |
+| Luer Lock Adapter | Weiblich | Verbindung von Filter & Schlauch | ~7 € | https://www.amazon.de/dp/B0BMFJSJP1?ref=ppx_yo2ov_dt_b_fed_asin_title |
+| Luer Lock Adapter | Männlich | Verbindung von Filter & Schlauch | ~8 € | https://www.amazon.de/dp/B0B8CJVX3S?ref=ppx_yo2ov_dt_b_fed_asin_title |
+| Diverse | Kabel, LEDs, Gehäuse | Verkabelung und Montage | ~5-10 € |
 | **Gesamt** | | | **~35-60 €** |
-
-![Hardware Setup](docs/images/hardware_setup.jpg)
-*Platzhalter: Foto des Hardwareaufbaus*
 
 ---
 
@@ -163,9 +134,6 @@ Reset-Button:
 └─ Pin 2 → RST
 ```
 
-![Wiring Diagram](docs/images/wiring_diagram.png)
-*Platzhalter: Schaltplan/Fritzing-Diagramm*
-
 ---
 
 ## 📦 Installation
@@ -185,7 +153,7 @@ Reset-Button:
 ### 1. Repository klonen
 
 ```bash
-git clone https://github.com/DEIN-USERNAME/sip-puff-controller.git
+git clone https://github.com/robinoraptor/sip-puff-controller.git
 cd sip-puff-controller
 ```
 
@@ -251,11 +219,6 @@ python sippuff_gui.py
    - Mit Slidern experimentieren
    - Echtzeit-Feedback im Log
 
-### Steuerung
-
-![Control Scheme](docs/images/control_scheme.png)
-*Platzhalter: Grafische Darstellung der Steuerung*
-
 #### Standard-Belegung:
 
 | Aktion | Eingabe | Beschreibung |
@@ -318,39 +281,6 @@ Editiere `gui/sippuff_defaults.json`:
 
 ---
 
-## 📁 Projektstruktur
-
-```
-sip-puff-controller/
-├── arduino/                    # Arduino-Firmware
-│   ├── src/
-│   │   └── main.cpp           # Hauptcode mit Serial-Protokoll
-│   └── platformio.ini         # PlatformIO-Konfiguration
-│
-├── gui/                        # Python-GUI
-│   ├── sippuff_gui.py         # Haupt-Anwendung
-│   ├── requirements.txt       # Python-Dependencies
-│   ├── start_gui.sh           # Linux/macOS-Starter
-│   ├── start_gui.bat          # Windows-Starter
-│   ├── sippuff_config.json    # Nutzer-Einstellungen (wird erstellt)
-│   ├── sippuff_defaults.json  # Standard-Werte (wird erstellt)
-│   ├── UNICODE_SYMBOLE.md     # Icon-Referenz
-│   └── UI_ANPASSUNGEN.md      # UI-Customization-Guide
-│
-├── docs/                       # Dokumentation
-│   └── images/                 # Screenshots und Fotos
-│       ├── system_overview.jpg
-│       ├── hardware_setup.jpg
-│       ├── gui_screenshot.png
-│       ├── wiring_diagram.png
-│       └── control_scheme.png
-│
-├── LICENSE                     # MIT Lizenz
-└── README.md                   # Diese Datei
-```
-
----
-
 ## 🔬 Technische Details
 
 ### Arduino-Firmware
@@ -368,89 +298,6 @@ sip-puff-controller/
 - **Architektur:** Event-driven mit Threading
 - **Plattformen:** Windows, macOS, Linux
 
-### Serial-Protokoll (Auszug)
-
-```
-Arduino → GUI:
-├─ ACTION:LEFT_CLICK          # Klick ausgeführt
-├─ SETTINGS:START             # Einstellungen folgen
-├─ CLICK_LEFT:-10             # Parameter-Wert
-└─ SETTINGS:END               # Ende der Übertragung
-
-GUI → Arduino:
-├─ SET:CLICK_LEFT:-10         # Parameter setzen
-├─ GET:SETTINGS               # Einstellungen abrufen
-└─ RECALIBRATE                # Neu kalibrieren
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Arduino wird nicht erkannt
-
-**Problem:** Port erscheint nicht in der GUI
-
-**Lösungen:**
-- USB-Kabel prüfen (Datenkabel, kein reines Ladekabel)
-- Treiber installieren (CH340 oder ATmega32U4)
-- Anderen USB-Port verwenden
-- "🔄" Button in der GUI klicken
-
-### Klicks werden nicht erkannt
-
-**Problem:** Saugen/Blasen löst keine Aktion aus
-
-**Lösungen:**
-1. Rekalibrieren (ohne Pusten/Saugen!)
-2. Schwellwerte senken (z.B. -5 / 5)
-3. Sensor-Anschluss prüfen
-4. Im Serial Monitor Rohwerte beobachten
-
-### Maus bewegt sich nicht
-
-**Problem:** Joystick hat keine Wirkung
-
-**Lösungen:**
-- Joystick-Checkbox aktiviert?
-- Verkabelung prüfen (besonders GND)
-- Deadzone verkleinern (< 25)
-- Joystick-Werte im Serial Monitor prüfen
-
-### GUI startet nicht
-
-**Problem:** Python-Fehler beim Start
-
-**Lösungen:**
-```bash
-# Dependencies neu installieren
-pip install --upgrade -r requirements.txt
-
-# Python-Version prüfen
-python --version  # Sollte >= 3.7 sein
-
-# Manuell starten
-python sippuff_gui.py
-```
-
----
-
-## 🔄 Weiterentwicklung
-
-### Mögliche Erweiterungen
-
-- [ ] **Wireless-Modus** via Bluetooth (ESP32)
-- [ ] **Zusätzliche Buttons** für Shortcuts (Strg, Alt, etc.)
-- [ ] **Profile-System** für verschiedene Anwendungen
-- [ ] **Makro-Aufzeichnung** für wiederkehrende Aktionen
-- [ ] **Barrierefreie Tastatur-Eingabe**
-- [ ] **Integration mit Eye-Tracking**
-- [ ] **3D-druckbares Gehäuse** (STL-Dateien)
-
-### Beiträge willkommen! 🤝
-
-Issues und Pull Requests sind herzlich willkommen. Bei größeren Änderungen bitte zuerst ein Issue öffnen.
-
 ---
 
 ## 📚 Wissenschaftlicher Hintergrund
@@ -466,7 +313,6 @@ https://doi.org/10.1080/07370024.2020.1724790
 
 - **Quadstick** - Kommerzielles Sip & Puff System
 - **Xbox Adaptive Controller** - Microsoft's Adaptive Gaming Controller
-- **Camera Mouse** - Eye-Tracking basierte Maussteuerung
 
 ---
 
@@ -503,29 +349,3 @@ Entwickelt im Rahmen eines Human Factors Projekts an der **Hochschule Furtwangen
 **Fakultät:** Engineering Technology  
 **Studiengang:** Human Factors 
 **Semester:** 2. Semester  
-
----
-
-## 🙏 Danksagung
-
-Besonderer Dank gilt:
-
-- Allen Testern und Nutzern des Systems für wertvolles Feedback
-- Der Hochschule Furtwangen für die Unterstützung
-- Der Open-Source-Community für Tools und Bibliotheken
-
----
-
-## 📧 Kontakt & Support
-
-**Fragen zum Projekt?**
-- GitHub Issues: [Issues öffnen](https://github.com/DEIN-USERNAME/sip-puff-controller/issues)
-- Diskussionen: [Discussions](https://github.com/DEIN-USERNAME/sip-puff-controller/discussions)
-
----
-
-**⭐ Wenn dir dieses Projekt geholfen hat, gib ihm gerne einen Stern auf GitHub!**
-
----
-
-*Entwickelt mit ❤️ für mehr Barrierefreiheit und Selbstständigkeit*
