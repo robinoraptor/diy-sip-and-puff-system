@@ -65,7 +65,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 ![Prototyp v3.0](docs/images/gui_v1.png)
 
 **Features:**
-- Vollständige GUI-Integration
+- Ersze vollständige GUI-Integration
 - Echtzeit-Parameteranpassung
 - Persistente Einstellungen
 - Moderne CustomTkinter-UI
@@ -92,7 +92,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 - ✅ **Adaptive Schwellwerte** (-400 bis +400)
 - ✅ **Joystick aktivierbar/deaktivierbar**
 
-![GUI Screenshot](docs/images/gui_v1.png)
+![GUI Screenshot](docs/images/gui_v2.png)
 
 ---
 
@@ -109,7 +109,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 | Luer Lock Adapter | Weiblich | Verbindung von Filter & Schlauch | ~7 € | https://www.amazon.de/dp/B0BMFJSJP1?ref=ppx_yo2ov_dt_b_fed_asin_title |
 | Luer Lock Adapter | Männlich | Verbindung von Filter & Schlauch | ~8 € | https://www.amazon.de/dp/B0B8CJVX3S?ref=ppx_yo2ov_dt_b_fed_asin_title |
 | Diverse | Kabel, LEDs, Gehäuse | Verkabelung und Montage | ~5-10 € |
-| **Gesamt** | | | **~35-60 €** |
+| **Gesamt** | | | **~75-80 €** |
 
 ---
 
