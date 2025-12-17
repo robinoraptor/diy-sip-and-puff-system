@@ -17,13 +17,19 @@ int pressureBaseline = 0; // Nullpunkt bei Umgebungsdruck
 const int SAMPLES = 50;   // Anzahl Samples für Kalibrierung
 
 // Klick-Schwellwerte (über Serial änderbar)
-int clickLeft = -10;   // Einfacher Linksklick (Saugen)
-int clickDouble = -15; // Doppelter Linksklick (starkes Saugen)
-int clickRight = 10;   // Rechtsklick (Blasen)
+int clickLeft = 10;   // Einfacher Linksklick (Pusten)
+int clickDouble = 15; // Doppelter Linksklick (starkes Pusten)
+int clickRight = -10; // Rechtsklick (Saugen)
 
-// Debouncing für Klicks
+// Scroll-Schwellwerte (über Serial änderbar)
+int scrollUp = -5;         // Scroll nach oben (leichtes Saugen)
+int scrollDown = 5;        // Scroll nach unten (leichtes Pusten)
+int scrollSpeed = 1;       // Scroll-Geschwindigkeit (1-5)
+bool scrollEnabled = true; // Scroll aktivierbar/deaktivierbar
+
+// Debouncing für Klicks (über Serial änderbar)
 unsigned long lastClickTime = 0;
-unsigned long clickDebounce = 500; // 500ms zwischen Klicks (änderbar)
+unsigned long clickDebounce = 500; // 500ms zwischen Klicks
 
 // Joystick-Einstellungen (über Serial änderbar)
 const int JOY_CENTER = 512; // Mittelposition des Joysticks
@@ -32,8 +38,8 @@ int wavelength = 15;        // Geschwindigkeit in Pixel pro Iteration
 int period = 35;            // Update-Intervall in MS
 unsigned long cursorFrequencyTimer = 0;
 
-// Joystick-Aktivierung
-bool joystickEnabled = true; // Per Serial steuerbar
+// Joystick-Aktivierung (über Serial änderbar)
+bool joystickEnabled = true;
 
 // Status-LED
 const int LED_PIN = LED_BUILTIN_TX;
@@ -42,9 +48,13 @@ const int LED_PIN = LED_BUILTIN_TX;
 String serialBuffer = "";
 bool commandReady = false;
 
+// Drucktest-Modus
+bool pressureTestMode = false; // Wenn true, sende kontinuierlich Druckwerte
+
 // Function Prototypes
 void calibratePressureSensor();
 void handleClicks(int pressureDiff);
+void handleScrolling(int pressureDiff);
 void handleMouseMovement();
 void blinkLED(int times);
 void processSerialCommand(String cmd);
@@ -60,7 +70,6 @@ void setup()
 
   Serial.println(F("================================="));
   Serial.println(F("  Sip & Puff Mouse Controller"));
-  Serial.println(F("  mit GUI-Konfiguration"));
   Serial.println(F("================================="));
   Serial.println();
 
@@ -110,17 +119,33 @@ void loop()
   int pressureRaw = analogRead(PRESSURE_PIN);
   int pressureDiff = pressureRaw - pressureBaseline;
 
-  // Mausklicks über Sip & Puff
-  handleClicks(pressureDiff);
-
-  // Mausbewegung über Joystick (wenn aktiviert)
-  if (joystickEnabled && millis() >= cursorFrequencyTimer)
+  // Drucktest-Modus: Sende kontinuierlich Werte
+  if (pressureTestMode)
   {
-    handleMouseMovement();
-    cursorFrequencyTimer = millis() + period;
+    // Sende den Druck-Wert
+    Serial.println(pressureDiff);
+    delay(200); // 5Hz Update-Rate für Stabilität
   }
+  else
+  {
+    // Mausklicks über Sip & Puff
+    handleClicks(pressureDiff);
 
-  delay(10);
+    // Scrolling über leichtes Sip & Puff (nur wenn aktiviert)
+    if (scrollEnabled)
+    {
+      handleScrolling(pressureDiff);
+    }
+
+    // Mausbewegung über Joystick (wenn aktiviert)
+    if (joystickEnabled && millis() >= cursorFrequencyTimer)
+    {
+      handleMouseMovement();
+      cursorFrequencyTimer = millis() + period;
+    }
+
+    delay(10);
+  }
 }
 
 void calibratePressureSensor()
@@ -156,8 +181,8 @@ void handleClicks(int pressureDiff)
     return;
   }
 
-  // Doppelklick (starkes Saugen)
-  if (pressureDiff < clickDouble)
+  // Doppelklick (starkes Pusten)
+  if (pressureDiff > clickDouble)
   {
     Serial.println(F("ACTION:DOUBLE_CLICK"));
     Mouse.click(MOUSE_LEFT);
@@ -167,8 +192,8 @@ void handleClicks(int pressureDiff)
     blinkLED(2);
   }
 
-  // Einfacher Linksklick (Saugen)
-  else if (pressureDiff < clickLeft)
+  // Einfacher Linksklick (Pusten)
+  else if (pressureDiff > clickLeft)
   {
     Serial.println(F("ACTION:LEFT_CLICK"));
     Mouse.click(MOUSE_LEFT);
@@ -176,13 +201,37 @@ void handleClicks(int pressureDiff)
     blinkLED(1);
   }
 
-  // Rechtsklick (Blasen)
-  else if (pressureDiff > clickRight)
+  // Rechtsklick (Saugen)
+  else if (pressureDiff < clickRight)
   {
     Serial.println(F("ACTION:RIGHT_CLICK"));
     Mouse.click(MOUSE_RIGHT);
     lastClickTime = currentTime;
     blinkLED(1);
+  }
+}
+
+void handleScrolling(int pressureDiff)
+{
+  // Scroll nur wenn kein Klick gerade passiert ist (Debounce-Zeit)
+  unsigned long currentTime = millis();
+  if (currentTime - lastClickTime < clickDebounce)
+  {
+    return;
+  }
+
+  // Scroll nach oben (leichtes Saugen)
+  // Bereich: scrollUp bis clickRight (z.B. -5 bis -10)
+  if (pressureDiff < scrollUp && pressureDiff >= clickRight)
+  {
+    Mouse.move(0, 0, scrollSpeed); // Positiv = scroll up
+  }
+
+  // Scroll nach unten (leichtes Pusten)
+  // Bereich: scrollDown bis clickLeft (z.B. +5 bis +10)
+  else if (pressureDiff > scrollDown && pressureDiff <= clickLeft)
+  {
+    Mouse.move(0, 0, -scrollSpeed); // Negativ = scroll down
   }
 }
 
@@ -280,6 +329,27 @@ void processSerialCommand(String cmd)
         clickRight = value;
         Serial.println(F("OK:CLICK_RIGHT"));
       }
+      else if (key == "SCROLL_UP")
+      {
+        scrollUp = value;
+        Serial.println(F("OK:SCROLL_UP"));
+      }
+      else if (key == "SCROLL_DOWN")
+      {
+        scrollDown = value;
+        Serial.println(F("OK:SCROLL_DOWN"));
+      }
+      else if (key == "SCROLL_SPEED")
+      {
+        scrollSpeed = value;
+        Serial.println(F("OK:SCROLL_SPEED"));
+      }
+      else if (key == "SCROLL")
+      {
+        scrollEnabled = (value == 1);
+        Serial.print(F("OK:SCROLL:"));
+        Serial.println(scrollEnabled ? "ON" : "OFF");
+      }
       else if (key == "WAVELENGTH")
       {
         wavelength = value;
@@ -318,6 +388,16 @@ void processSerialCommand(String cmd)
     calibratePressureSensor();
     Serial.println(F("OK:RECALIBRATE"));
   }
+  else if (cmd == "PRESSURE_TEST:START")
+  {
+    pressureTestMode = true;
+    Serial.println(F("OK:PRESSURE_TEST:START"));
+  }
+  else if (cmd == "PRESSURE_TEST:STOP")
+  {
+    pressureTestMode = false;
+    Serial.println(F("OK:PRESSURE_TEST:STOP"));
+  }
 }
 
 void sendCurrentSettings()
@@ -329,6 +409,14 @@ void sendCurrentSettings()
   Serial.println(clickDouble);
   Serial.print(F("CLICK_RIGHT:"));
   Serial.println(clickRight);
+  Serial.print(F("SCROLL_UP:"));
+  Serial.println(scrollUp);
+  Serial.print(F("SCROLL_DOWN:"));
+  Serial.println(scrollDown);
+  Serial.print(F("SCROLL_SPEED:"));
+  Serial.println(scrollSpeed);
+  Serial.print(F("SCROLL:"));
+  Serial.println(scrollEnabled ? "1" : "0");
   Serial.print(F("WAVELENGTH:"));
   Serial.println(wavelength);
   Serial.print(F("PERIOD:"));

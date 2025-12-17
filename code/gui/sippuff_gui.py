@@ -12,18 +12,19 @@ import serial.tools.list_ports
 import threading
 import json
 import os
+import time
 from datetime import datetime
 
 # CustomTkinter Appearance
 ctk.set_appearance_mode("system")  # "light" oder "dark"
-ctk.set_default_color_theme("theme_red.json")  # "blue", "green", "dark-blue"
+ctk.set_default_color_theme("theme_red.json")  # Custom Red Theme
 
 class SipPuffGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Sip & Puff Controller - Einstellungen")
-        self.root.geometry("650x800")
-        self.root.resizable(False, True)  # Fenster nicht veränderbar
+        self.root.geometry("650x850")
+        self.root.resizable(False, True)
         
         # Serial-Verbindung
         self.serial_connection = None
@@ -37,18 +38,18 @@ class SipPuffGUI:
         # Aktuelle Werte
         self.current_values = self.default_values.copy()
         
-        # Unicode-Symbole (besser als Emojis, funktionieren überall)
+        # Unicode-Symbole für Buttons
         self.icons = {
-            'gamepad': '⬢',      # Sechseck für Gaming
-            'wifi': '◈',         # Netzwerk-Symbol
-            'mouse': '◉',        # Gefüllter Kreis für Klicks
-            'cog': '⚙',          # Zahnrad
-            'clipboard': '◫',    # Clipboard
             'sync': '⟲',         # Sync-Pfeil
             'save': '⬇',         # Download/Save
             'undo': '↶',         # Zurück-Pfeil
             'refresh': '↻',      # Refresh-Pfeil
         }
+        
+        # Drucktest-Fenster
+        self.pressure_test_window = None
+        self.pressure_test_active = False
+        self.pressure_update_pending = False  # Verhindere Update-Stau -> hängt sich sonst auf
         
         self.create_widgets()
         self.load_config()
@@ -56,9 +57,13 @@ class SipPuffGUI:
     def load_defaults(self):
         """Lädt Standard-Werte aus JSON oder erstellt die Datei"""
         default_values = {
-            'click_left': -10,
-            'click_double': -15,
-            'click_right': 10,
+            'click_left': 10,      
+            'click_double': 15,   
+            'click_right': -10,   
+            'scroll_up': -5,     
+            'scroll_down': 5,    
+            'scroll_speed': 1,    
+            'scroll_enabled': True, 
             'wavelength': 15,
             'period': 35,
             'deadzone': 25,
@@ -88,24 +93,36 @@ class SipPuffGUI:
         return default_values
         
     def create_widgets(self):
-        # Header mit Titel - linksbündig
+        # Header mit Titel und Drucktest-Button
         header = ctk.CTkFrame(self.root, corner_radius=0, fg_color="transparent")
         header.pack(fill="x", padx=20, pady=(20, 10))
         
-        title = ctk.CTkLabel(header, text="Sip & Puff Controller", font=ctk.CTkFont(size=24, weight="bold"))
-        title.pack(anchor="w")  # Linksbündig
+        # Titel
+        left_header = ctk.CTkFrame(header, fg_color="transparent")
+        left_header.pack(side="left", fill="both", expand=True)
         
-        subtitle = ctk.CTkLabel(header, text="Echtzeit-Konfiguration", font=ctk.CTkFont(size=12), text_color="gray")
-        subtitle.pack(anchor="w")  # Linksbündig
+        title = ctk.CTkLabel(left_header, text="Sip & Puff Controller", font=ctk.CTkFont(size=24, weight="bold"))
+        title.pack(anchor="w") 
         
-        # Scrollbarer Container (WEISS) für die einzelnen Blöcke
+        subtitle = ctk.CTkLabel(left_header, text="Echtzeit-Konfiguration", font=ctk.CTkFont(size=12), text_color="gray")
+        subtitle.pack(anchor="w")
+        
+        # Drucktest-Button
+        self.pressure_test_btn = ctk.CTkButton(header, text="Drucktest", 
+                                              command=self.open_pressure_test,
+                                              width=140,
+                                              font=ctk.CTkFont(size=13, weight="bold"),
+                                              state="disabled")  # Deaktiviert bis verbunden
+        self.pressure_test_btn.pack(side="right", padx=5)
+        
+        # Scrollbarer Container für die einzelnen Blöcke
         scrollable_container = ctk.CTkScrollableFrame(self.root, corner_radius=10, fg_color="transparent")
         scrollable_container.pack(fill="both", expand=True, padx=20, pady=(0, 10))
         
-        # main_frame ist jetzt der scrollbare Container
+        # main_frame ist scrollbarer Container
         main_frame = scrollable_container
         
-        # Verbindungsbereich (einzelner Block)
+        # Verbindungsbereich 
         conn_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         conn_frame.pack(fill="x", pady=(0, 10))
         
@@ -135,12 +152,39 @@ class SipPuffGUI:
                                    font=ctk.CTkFont(size=16, weight="bold"))
         click_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
         
-        self.create_slider(click_frame, "Linksklick (Sip):", 'click_left', -400, 0, 1, tooltip="Saugen: Negativer Wert für Linksklick")
-        self.create_slider(click_frame, "Doppelklick (Sip stark):", 'click_double', -400, 0, 2, tooltip="Stärkeres Saugen: Noch negativer für Doppelklick")
-        self.create_slider(click_frame, "Rechtsklick (Puff):", 'click_right', 0, 400, 3, tooltip="Blasen: Positiver Wert für Rechtsklick")
+        self.create_slider(click_frame, "Linksklick (Puff):", 'click_left', 0, 400, 1, tooltip="Pusten: Positiver Wert für Linksklick")
+        self.create_slider(click_frame, "Doppelklick (Puff stark):", 'click_double', 0, 400, 2, tooltip="Stärkeres Pusten: Höherer positiver Wert für Doppelklick")
+        self.create_slider(click_frame, "Rechtsklick (Sip):", 'click_right', -400, 0, 3, tooltip="Saugen: Negativer Wert für Rechtsklick")
         
         # Spacing
         ctk.CTkLabel(click_frame, text="").grid(row=4, column=0, pady=5)
+        
+        # Scroll-Schwellwerte
+        scroll_frame = ctk.CTkFrame(main_frame, corner_radius=10)
+        scroll_frame.pack(fill="x", pady=(0, 10))
+        
+        scroll_title = ctk.CTkLabel(scroll_frame, text="Scroll-Schwellwerte", 
+                                    font=ctk.CTkFont(size=16, weight="bold"))
+        scroll_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
+        
+        # Checkbox für Scroll-Aktivierung
+        self.scroll_var = ctk.BooleanVar(value=True)
+        self.scroll_check = ctk.CTkCheckBox(scroll_frame, text="Scroll aktiviert", 
+                                           variable=self.scroll_var,
+                                           command=self.on_scroll_toggle,
+                                           font=ctk.CTkFont(size=13, weight="bold"),
+                                           border_width=1)
+        self.scroll_check.grid(row=1, column=0, columnspan=3, sticky="w", padx=15, pady=10)
+        
+        self.create_slider(scroll_frame, "Scroll Up (Sip leicht):", 'scroll_up', -400, 0, 2, 
+                          tooltip="Leichtes Saugen: Scrollt nach oben (sollte > Rechtsklick sein)")
+        self.create_slider(scroll_frame, "Scroll Down (Puff leicht):", 'scroll_down', 0, 400, 3, 
+                          tooltip="Leichtes Pusten: Scrollt nach unten (sollte < Linksklick sein)")
+        self.create_slider(scroll_frame, "Scroll-Geschwindigkeit:", 'scroll_speed', 1, 5, 4, 
+                          tooltip="Scroll-Speed: 1=langsam, 5=schnell")
+        
+        # Spacing
+        ctk.CTkLabel(scroll_frame, text="").grid(row=5, column=0, pady=5)
         
         # Joystick-Einstellungen
         joy_frame = ctk.CTkFrame(main_frame, corner_radius=10)
@@ -155,7 +199,7 @@ class SipPuffGUI:
                                              variable=self.joystick_var,
                                              command=self.on_joystick_toggle,
                                              font=ctk.CTkFont(size=13, weight="bold"),
-                                             border_width=1)  # Dünner Rahmen
+                                             border_width=1)  
         self.joystick_check.grid(row=1, column=0, columnspan=3, sticky="w", padx=15, pady=10)
         
         self.create_slider(joy_frame, "Geschwindigkeit:", 'wavelength', 5, 50, 2, tooltip="Höher = schneller")
@@ -177,7 +221,7 @@ class SipPuffGUI:
         # Spacing
         ctk.CTkLabel(adv_frame, text="").grid(row=2, column=0, pady=5)
         
-        # Log-Bereich
+        # Log-Bereich (Dient als Serieller Monitor innerhalb der GUI)
         log_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         log_frame.pack(fill="both", expand=True, pady=(0, 10))
         
@@ -187,7 +231,7 @@ class SipPuffGUI:
         self.log_text = ctk.CTkTextbox(log_frame, height=120, font=ctk.CTkFont(size=11))
         self.log_text.pack(fill="both", expand=True, padx=15, pady=(0, 15))
         
-        # Aktionsbuttons - AUSSERHALB, im freien Raum mit Text UND Icons
+        # Aktionsbuttons
         action_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         action_frame.pack(fill="x", padx=20, pady=(0, 15))
         
@@ -212,7 +256,7 @@ class SipPuffGUI:
         
         value_var = ctk.IntVar(value=self.current_values[key])
         
-        # Slider mit angepassten Farben
+        # Slider
         slider = ctk.CTkSlider(parent, from_=from_, to=to, 
                               variable=value_var, width=300,
                               command=lambda v: self.on_slider_change(key, v))
@@ -234,11 +278,11 @@ class SipPuffGUI:
                     if self.connected:
                         self.send_setting(key, new_value)
                 else:
-                    # Wert außerhalb des Bereichs - zurücksetzen
+                    # Wert außerhalb des Bereichs 
                     value_entry.delete(0, "end")
                     value_entry.insert(0, str(self.current_values[key]))
             except ValueError:
-                # Ungültige Eingabe - zurücksetzen
+                # Ungültige Eingabe 
                 value_entry.delete(0, "end")
                 value_entry.insert(0, str(self.current_values[key]))
         
@@ -301,6 +345,7 @@ class SipPuffGUI:
             self.connect_btn.configure(text="Trennen")
             self.status_label.configure(text="● Verbunden", text_color="green")
             self.recal_btn.configure(state="normal")
+            self.pressure_test_btn.configure(state="normal")  # Drucktest aktivieren
             self.log(f"Verbunden mit {port}")
             
             # Starte Empfangs-Thread
@@ -316,11 +361,16 @@ class SipPuffGUI:
             
     def disconnect(self):
         if self.serial_connection:
+            # Drucktest stoppen falls aktiv
+            if self.pressure_test_active:
+                self.close_pressure_test()
+            
             self.serial_connection.close()
             self.connected = False
             self.connect_btn.configure(text="Verbinden")
             self.status_label.configure(text="● Nicht verbunden", text_color="red")
             self.recal_btn.configure(state="disabled")
+            self.pressure_test_btn.configure(state="disabled")  # Drucktest deaktivieren
             self.log("Verbindung getrennt")
             
     def read_serial(self):
@@ -328,13 +378,34 @@ class SipPuffGUI:
             try:
                 if self.serial_connection.in_waiting:
                     line = self.serial_connection.readline().decode('utf-8').strip()
+                    # WICHTIG
+                    line = line.replace('\r', '').replace('\n', '')
                     if line:
+                        # Debug-Ausgabe nur wenn NICHT im Drucktest (zu viel Output)
+                        if not self.pressure_test_active:
+                            print(f"DEBUG read_serial: '{line}'")
                         self.process_serial_message(line)
             except Exception as e:
                 self.log(f"Lesefehler: {e}")
                 break
                 
     def process_serial_message(self, msg):
+        # Im Drucktest-Modus: Interpretiere jede Zeile direkt als Zahl
+        if self.pressure_test_active:
+            try:
+                # Versuche direkt als Zahl zu parsen
+                pressure_value = int(msg.strip())
+                
+                # Throttling: Nur updaten wenn kein Update läuft
+                if not self.pressure_update_pending:
+                    self.pressure_update_pending = True
+                    self.root.after(0, self._do_pressure_update, pressure_value)
+                
+                return 
+            except ValueError:
+                pass
+        
+        # Normale Verarbeitung (außerhalb Drucktest)
         if msg.startswith("ACTION:"):
             action = msg.split(":")[1]
             action_names = {
@@ -345,14 +416,16 @@ class SipPuffGUI:
             self.log(action_names.get(action, action))
         elif msg.startswith("OK:"):
             # Bestätigung erhalten
-            pass
+            if "PRESSURE_TEST" in msg:
+                print(f"DEBUG: {msg}")
         elif msg.startswith("INFO:"):
             info = msg.split(":", 1)[1]
             self.log(f"ℹ {info}")
+        elif msg.startswith("SETTINGS:"):
+            pass  # Settings-Nachrichten ignorieren
         else:
             # Andere Nachrichten loggen
-            if not msg.startswith("SETTINGS:"):
-                self.log(msg)
+            self.log(msg)
                 
     def on_slider_change(self, key, value):
         value = int(float(value))
@@ -363,7 +436,7 @@ class SipPuffGUI:
         entry.delete(0, "end")
         entry.insert(0, str(value))
         
-        # Sende an Arduino (wenn verbunden)
+        # Senden an Arduino
         if self.connected:
             self.send_setting(key, value)
             
@@ -374,6 +447,14 @@ class SipPuffGUI:
         if self.connected:
             self.send_setting('joystick', 1 if enabled else 0)
             self.log(f"Joystick {'aktiviert' if enabled else 'deaktiviert'}")
+    
+    def on_scroll_toggle(self):
+        enabled = self.scroll_var.get()
+        self.current_values['scroll_enabled'] = enabled
+        
+        if self.connected:
+            self.send_setting('scroll', 1 if enabled else 0)
+            self.log(f"Scroll {'aktiviert' if enabled else 'deaktiviert'}")
             
     def send_setting(self, key, value):
         if not self.connected or not self.serial_connection:
@@ -383,6 +464,10 @@ class SipPuffGUI:
             'click_left': 'CLICK_LEFT',
             'click_double': 'CLICK_DOUBLE',
             'click_right': 'CLICK_RIGHT',
+            'scroll_up': 'SCROLL_UP',       
+            'scroll_down': 'SCROLL_DOWN',   
+            'scroll_speed': 'SCROLL_SPEED', 
+            'scroll': 'SCROLL',             
             'wavelength': 'WAVELENGTH',
             'period': 'PERIOD',
             'deadzone': 'DEADZONE',
@@ -403,6 +488,8 @@ class SipPuffGUI:
         for key, value in self.current_values.items():
             if key == 'joystick_enabled':
                 self.send_setting('joystick', 1 if value else 0)
+            elif key == 'scroll_enabled':
+                self.send_setting('scroll', 1 if value else 0)
             else:
                 self.send_setting(key, value)
         self.log("Einstellungen synchronisiert")
@@ -426,21 +513,6 @@ class SipPuffGUI:
         except Exception as e:
             self.log(f"Speicherfehler: {e}")
             messagebox.showerror("Fehler", f"Konnte nicht speichern: {e}")
-    
-    def save_as_defaults(self):
-        """Speichert aktuelle Werte als neue Standard-Werte"""
-        if messagebox.askyesno("Als Standard speichern", 
-                              "Möchtest du die aktuellen Einstellungen als neue Standard-Werte speichern?\n\n"
-                              "Diese werden beim Klick auf 'Standard' wiederhergestellt."):
-            try:
-                with open(self.default_config_file, 'w') as f:
-                    json.dump(self.current_values, f, indent=2)
-                self.default_values = self.current_values.copy()
-                self.log("✓ Als Standard gespeichert")
-                messagebox.showinfo("Gespeichert", "Aktuelle Einstellungen wurden als neue Standard-Werte gespeichert!")
-            except Exception as e:
-                self.log(f"Fehler beim Speichern der Defaults: {e}")
-                messagebox.showerror("Fehler", f"Konnte Defaults nicht speichern: {e}")
             
     def load_config(self):
         if os.path.exists(self.config_file):
@@ -456,7 +528,7 @@ class SipPuffGUI:
     def reset_to_defaults(self):
         if messagebox.askyesno("Zurücksetzen", 
                               "Möchtest du alle Einstellungen auf Standard zurücksetzen?"):
-            # Lade Defaults neu aus JSON (falls sie geändert wurden)
+            # Lade Defaults neu aus JSON
             self.default_values = self.load_defaults()
             self.current_values = self.default_values.copy()
             self.update_ui_from_values()
@@ -470,12 +542,162 @@ class SipPuffGUI:
         for key, value in self.current_values.items():
             if key == 'joystick_enabled':
                 self.joystick_var.set(value)
+            elif key == 'scroll_enabled':
+                self.scroll_var.set(value)
             elif hasattr(self, f"{key}_var"):
                 var = getattr(self, f"{key}_var")
                 var.set(value)
                 entry = getattr(self, f"{key}_entry")
                 entry.delete(0, "end")
                 entry.insert(0, str(value))
+    
+    def _do_pressure_update(self, pressure_value):
+        """Führt das Drucktest-Update aus und setzt Flag zurück"""
+        try:
+            self.update_pressure_display(pressure_value)
+        finally:
+            # Flag zurücksetzen - bereit für nächstes Update
+            self.pressure_update_pending = False
+    
+    def open_pressure_test(self):
+        """Öffnet das Drucktest-Fenster"""
+        if self.pressure_test_window is not None and self.pressure_test_window.winfo_exists():
+            # Fenster in den Vordergrund
+            self.pressure_test_window.focus()
+            return
+        
+        # Starte Drucktest-Modus am Arduino
+        if self.connected and self.serial_connection:
+            try:
+                self.serial_connection.reset_input_buffer()  # Empfangsbuffer leeren
+                self.serial_connection.reset_output_buffer()  # Sendebuffer leeren
+                print("DEBUG: Serial Buffer geleert")
+                
+                # Kurz warten
+                time.sleep(0.1)
+                
+                # Starte Drucktest
+                self.serial_connection.write(b"PRESSURE_TEST:START\n")
+                self.pressure_test_active = True
+                print("DEBUG: PRESSURE_TEST:START gesendet")
+            except Exception as e:
+                self.log(f"Fehler beim Starten des Drucktests: {e}")
+                return
+        
+        # Erstelle neues Toplevel-Fenster
+        self.pressure_test_window = ctk.CTkToplevel(self.root)
+        self.pressure_test_window.title("Drucktest - Echtzeit-Anzeige")
+        self.pressure_test_window.geometry("500x400")
+        self.pressure_test_window.resizable(False, False)
+        
+        # Wenn Fenster geschlossen wird, Drucktest stoppen
+        self.pressure_test_window.protocol("WM_DELETE_WINDOW", self.close_pressure_test)
+        
+        # Titel
+        title_label = ctk.CTkLabel(self.pressure_test_window, 
+                                   text="Drucktest", 
+                                   font=ctk.CTkFont(size=24, weight="bold"))
+        title_label.pack(pady=(20, 10))
+        
+        # Info-Text
+        info_label = ctk.CTkLabel(self.pressure_test_window,
+                                  text="Puste oder sauge in den Schlauch, um den Druck zu testen",
+                                  font=ctk.CTkFont(size=12),
+                                  text_color="gray")
+        info_label.pack(pady=(0, 20))
+        
+        # Haupt-Container für Druckwert
+        self.pressure_display_frame = ctk.CTkFrame(self.pressure_test_window, 
+                                                   corner_radius=15,
+                                                   fg_color=("gray85", "gray20"))
+        self.pressure_display_frame.pack(fill="both", expand=True, padx=30, pady=(0, 20))
+        
+        # Druckwert-Label
+        self.pressure_value_label = ctk.CTkLabel(self.pressure_display_frame,
+                                                 text="0",
+                                                 font=ctk.CTkFont(size=80, weight="bold"))
+        self.pressure_value_label.pack(pady=(40, 10))
+        
+        # Status-Label (NEUTRAL, SAUGEN, PUSTEN)
+        self.pressure_status_label = ctk.CTkLabel(self.pressure_display_frame,
+                                                  text="NEUTRAL",
+                                                  font=ctk.CTkFont(size=24, weight="bold"))
+        self.pressure_status_label.pack(pady=(0, 20))
+        
+        # Progressbar als visuelle Darstellung
+        self.pressure_progress = ctk.CTkProgressBar(self.pressure_display_frame,
+                                                    width=400,
+                                                    height=20)
+        self.pressure_progress.pack(pady=(0, 40))
+        self.pressure_progress.set(0.5)  # Mitte = Neutral
+        
+        # Schließen-Button
+        close_btn = ctk.CTkButton(self.pressure_test_window,
+                                  text="Schließen",
+                                  command=self.close_pressure_test,
+                                  width=150,
+                                  font=ctk.CTkFont(size=14))
+        close_btn.pack(pady=(0, 20))
+        
+        self.log("Drucktest gestartet")
+    
+    def close_pressure_test(self):
+        """Schließt das Drucktest-Fenster und stoppt den Test"""
+        if self.connected and self.serial_connection and self.pressure_test_active:
+            try:
+                self.serial_connection.write(b"PRESSURE_TEST:STOP\n")
+                self.pressure_test_active = False
+                self.pressure_update_pending = False  # Flag zurücksetzen
+                print("DEBUG: PRESSURE_TEST:STOP gesendet")
+                
+                # Warte kurz und leere dann den Buffer
+                time.sleep(0.2)
+                self.serial_connection.reset_input_buffer()
+                print("DEBUG: Serial Buffer nach Stop geleert")
+            except Exception as e:
+                self.log(f"Fehler beim Stoppen des Drucktests: {e}")
+        
+        if self.pressure_test_window is not None and self.pressure_test_window.winfo_exists():
+            self.pressure_test_window.destroy()
+            self.pressure_test_window = None
+        
+        self.log("Drucktest beendet")
+    
+    def update_pressure_display(self, pressure_value):
+        """Aktualisiert die Drucktest-Anzeige"""
+        
+        if self.pressure_test_window is None:
+            return
+        
+        if not self.pressure_test_window.winfo_exists():
+            return
+        
+        # Update Wert-Label
+        self.pressure_value_label.configure(text=str(pressure_value))
+        
+        # Bestimme Status und Farbe
+        if pressure_value < -5:
+            # Saugen
+            status = "SAUGEN"
+            color = "#3498db"  # Blau
+            progress_value = max(0, 0.5 - abs(pressure_value) / 800)  # Links von Mitte
+        elif pressure_value > 5:
+            # Pusten
+            status = "PUSTEN"
+            color = "#e74c3c"  # Rot
+            progress_value = min(1.0, 0.5 + abs(pressure_value) / 800)  # Rechts von Mitte
+        else:
+            # Neutral
+            status = "NEUTRAL"
+            color = "#2ecc71"  # Grün
+            progress_value = 0.5
+        
+        # Update Status-Label
+        self.pressure_status_label.configure(text=status, text_color=color)
+        self.pressure_value_label.configure(text_color=color)
+        
+        # Update Progressbar
+        self.pressure_progress.set(progress_value)
                 
     def log(self, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
