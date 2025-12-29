@@ -10,5 +10,5 @@
   "period": 35,
   "deadzone": 25,
   "debounce": 500,
-  "joystick_enabled": true
+  "joystick_enabled": false
 }

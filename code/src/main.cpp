@@ -6,6 +6,7 @@
  */
 
 #include <Mouse.h>
+#include <EEPROM.h>
 
 // Pin-Definitionen
 const int PRESSURE_PIN = A0; // MPXV7002DP Drucksensor
@@ -27,7 +28,7 @@ int scrollDown = 5;        // Scroll nach unten (leichtes Pusten)
 int scrollSpeed = 1;       // Scroll-Geschwindigkeit (1-5)
 bool scrollEnabled = true; // Scroll aktivierbar/deaktivierbar
 
-// Debouncing für Klicks (über Serial änderbar)
+// Debouncing für Klicks
 unsigned long lastClickTime = 0;
 unsigned long clickDebounce = 500; // 500ms zwischen Klicks
 
@@ -38,7 +39,7 @@ int wavelength = 15;        // Geschwindigkeit in Pixel pro Iteration
 int period = 35;            // Update-Intervall in MS
 unsigned long cursorFrequencyTimer = 0;
 
-// Joystick-Aktivierung (über Serial änderbar)
+// Joystick-Aktivierung
 bool joystickEnabled = true;
 
 // Status-LED
@@ -51,6 +52,27 @@ bool commandReady = false;
 // Drucktest-Modus
 bool pressureTestMode = false; // Wenn true, sende kontinuierlich Druckwerte
 
+// EEPROM-Speicherung
+const int EEPROM_ADDRESS = 0;
+const uint16_t EEPROM_MAGIC = 0xA5B7;
+
+struct Settings
+{
+  uint16_t magic;
+  int clickLeft;
+  int clickDouble;
+  int clickRight;
+  int scrollUp;
+  int scrollDown;
+  int scrollSpeed;
+  bool scrollEnabled;
+  int wavelength;
+  int period;
+  int joyDeadzone;
+  unsigned long clickDebounce;
+  bool joystickEnabled;
+};
+
 // Function Prototypes
 void calibratePressureSensor();
 void handleClicks(int pressureDiff);
@@ -59,6 +81,9 @@ void handleMouseMovement();
 void blinkLED(int times);
 void processSerialCommand(String cmd);
 void sendCurrentSettings();
+void saveSettingsToEEPROM();
+void loadSettingsFromEEPROM();
+void resetToDefaults();
 
 void setup()
 {
@@ -70,8 +95,14 @@ void setup()
 
   Serial.println(F("================================="));
   Serial.println(F("  Sip & Puff Mouse Controller"));
+  Serial.println(F("  mit GUI-Konfiguration"));
+  Serial.println(F("  + Scroll-Funktion"));
+  Serial.println(F("  + EEPROM-Speicherung"));
   Serial.println(F("================================="));
   Serial.println();
+
+  // Lade gespeicherte Einstellungen aus EEPROM
+  loadSettingsFromEEPROM();
 
   // Kalibrierung des Drucksensors
   calibratePressureSensor();
@@ -122,22 +153,22 @@ void loop()
   // Drucktest-Modus: Sende kontinuierlich Werte
   if (pressureTestMode)
   {
-    // Sende den Druck-Wert
+    // Sende NUR den Wert
     Serial.println(pressureDiff);
     delay(200); // 5Hz Update-Rate für Stabilität
   }
   else
   {
-    // Mausklicks über Sip & Puff
+    // Normaler Betrieb: Mausklicks über Sip & Puff
     handleClicks(pressureDiff);
 
-    // Scrolling über leichtes Sip & Puff (nur wenn aktiviert)
+    // Scrolling über leichtes Sip & Puff
     if (scrollEnabled)
     {
       handleScrolling(pressureDiff);
     }
 
-    // Mausbewegung über Joystick (wenn aktiviert)
+    // Mausbewegung über Joystick
     if (joystickEnabled && millis() >= cursorFrequencyTimer)
     {
       handleMouseMovement();
@@ -398,6 +429,21 @@ void processSerialCommand(String cmd)
     pressureTestMode = false;
     Serial.println(F("OK:PRESSURE_TEST:STOP"));
   }
+  else if (cmd == "SAVE_EEPROM")
+  {
+    saveSettingsToEEPROM();
+    Serial.println(F("OK:SAVE_EEPROM"));
+  }
+  else if (cmd == "LOAD_EEPROM")
+  {
+    loadSettingsFromEEPROM();
+    Serial.println(F("OK:LOAD_EEPROM"));
+  }
+  else if (cmd == "RESET_DEFAULTS")
+  {
+    resetToDefaults();
+    Serial.println(F("OK:RESET_DEFAULTS"));
+  }
 }
 
 void sendCurrentSettings()
@@ -430,4 +476,89 @@ void sendCurrentSettings()
   Serial.print(F("BASELINE:"));
   Serial.println(pressureBaseline);
   Serial.println(F("SETTINGS:END"));
+}
+
+// EEPROM-Funktionen
+void saveSettingsToEEPROM()
+{
+  Serial.println(F("INFO:Speichere Einstellungen in EEPROM..."));
+
+  Settings settings;
+  settings.magic = EEPROM_MAGIC;
+  settings.clickLeft = clickLeft;
+  settings.clickDouble = clickDouble;
+  settings.clickRight = clickRight;
+  settings.scrollUp = scrollUp;
+  settings.scrollDown = scrollDown;
+  settings.scrollSpeed = scrollSpeed;
+  settings.scrollEnabled = scrollEnabled;
+  settings.wavelength = wavelength;
+  settings.period = period;
+  settings.joyDeadzone = joyDeadzone;
+  settings.clickDebounce = clickDebounce;
+  settings.joystickEnabled = joystickEnabled;
+
+  EEPROM.put(EEPROM_ADDRESS, settings);
+
+  Serial.println(F("INFO:Einstellungen gespeichert!"));
+  blinkLED(3);
+}
+
+void loadSettingsFromEEPROM()
+{
+  Serial.println(F("INFO:Lade Einstellungen aus EEPROM..."));
+
+  Settings settings;
+  EEPROM.get(EEPROM_ADDRESS, settings);
+
+  // Prüfe Magic Number
+  if (settings.magic == EEPROM_MAGIC)
+  {
+    // Gültige Einstellungen gefunden
+    clickLeft = settings.clickLeft;
+    clickDouble = settings.clickDouble;
+    clickRight = settings.clickRight;
+    scrollUp = settings.scrollUp;
+    scrollDown = settings.scrollDown;
+    scrollSpeed = settings.scrollSpeed;
+    scrollEnabled = settings.scrollEnabled;
+    wavelength = settings.wavelength;
+    period = settings.period;
+    joyDeadzone = settings.joyDeadzone;
+    clickDebounce = settings.clickDebounce;
+    joystickEnabled = settings.joystickEnabled;
+
+    Serial.println(F("INFO:Gespeicherte Einstellungen geladen!"));
+    blinkLED(2);
+  }
+  else
+  {
+    // Keine gültigen Einstellungen, behalte Defaults
+    Serial.println(F("INFO:Keine gespeicherten Einstellungen gefunden."));
+    Serial.println(F("INFO:Verwende Standard-Werte."));
+    blinkLED(1);
+  }
+}
+
+void resetToDefaults()
+{
+  Serial.println(F("INFO:Setze auf Standard-Werte zurück..."));
+
+  // Standard-Werte
+  clickLeft = 10;
+  clickDouble = 15;
+  clickRight = -10;
+  scrollUp = -5;
+  scrollDown = 5;
+  scrollSpeed = 1;
+  scrollEnabled = true;
+  wavelength = 15;
+  period = 35;
+  joyDeadzone = 25;
+  clickDebounce = 500;
+  joystickEnabled = true;
+
+  saveSettingsToEEPROM();
+
+  Serial.println(F("INFO:Standard-Werte wiederhergestellt!"));
 }

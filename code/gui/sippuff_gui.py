@@ -38,7 +38,7 @@ class SipPuffGUI:
         # Aktuelle Werte
         self.current_values = self.default_values.copy()
         
-        # Unicode-Symbole für Buttons
+        # Unicode-Symbole
         self.icons = {
             'sync': '⟲',         # Sync-Pfeil
             'save': '⬇',         # Download/Save
@@ -49,7 +49,10 @@ class SipPuffGUI:
         # Drucktest-Fenster
         self.pressure_test_window = None
         self.pressure_test_active = False
-        self.pressure_update_pending = False  # Verhindere Update-Stau -> hängt sich sonst auf
+        self.pressure_update_pending = False  # Verhindere Update-Stau
+        
+        # Erweiterte Einstellungen ausklappbar
+        self.advanced_expanded = False
         
         self.create_widgets()
         self.load_config()
@@ -58,12 +61,12 @@ class SipPuffGUI:
         """Lädt Standard-Werte aus JSON oder erstellt die Datei"""
         default_values = {
             'click_left': 10,      
-            'click_double': 15,   
-            'click_right': -10,   
-            'scroll_up': -5,     
-            'scroll_down': 5,    
-            'scroll_speed': 1,    
-            'scroll_enabled': True, 
+            'click_double': 15,    
+            'click_right': -10,    
+            'scroll_up': -5,       
+            'scroll_down': 5,      
+            'scroll_speed': 1,     
+            'scroll_enabled': True,
             'wavelength': 15,
             'period': 35,
             'deadzone': 25,
@@ -80,7 +83,6 @@ class SipPuffGUI:
                     print(f"✓ Standard-Werte aus {self.default_config_file} geladen")
             except Exception as e:
                 print(f"⚠ Fehler beim Laden der Defaults: {e}")
-                # Verwende hardcoded defaults
         else:
             # Erstelle Defaults-Datei beim ersten Start
             try:
@@ -93,7 +95,7 @@ class SipPuffGUI:
         return default_values
         
     def create_widgets(self):
-        # Header mit Titel und Drucktest-Button
+        # Header mit Titel 
         header = ctk.CTkFrame(self.root, corner_radius=0, fg_color="transparent")
         header.pack(fill="x", padx=20, pady=(20, 10))
         
@@ -102,10 +104,10 @@ class SipPuffGUI:
         left_header.pack(side="left", fill="both", expand=True)
         
         title = ctk.CTkLabel(left_header, text="Sip & Puff Controller", font=ctk.CTkFont(size=24, weight="bold"))
-        title.pack(anchor="w") 
+        title.pack(anchor="w")  
         
         subtitle = ctk.CTkLabel(left_header, text="Echtzeit-Konfiguration", font=ctk.CTkFont(size=12), text_color="gray")
-        subtitle.pack(anchor="w")
+        subtitle.pack(anchor="w")  
         
         # Drucktest-Button
         self.pressure_test_btn = ctk.CTkButton(header, text="Drucktest", 
@@ -119,7 +121,7 @@ class SipPuffGUI:
         scrollable_container = ctk.CTkScrollableFrame(self.root, corner_radius=10, fg_color="transparent")
         scrollable_container.pack(fill="both", expand=True, padx=20, pady=(0, 10))
         
-        # main_frame ist scrollbarer Container
+        # scrollbarer Container
         main_frame = scrollable_container
         
         # Verbindungsbereich 
@@ -159,12 +161,37 @@ class SipPuffGUI:
         # Spacing
         ctk.CTkLabel(click_frame, text="").grid(row=4, column=0, pady=5)
         
+        # Erweiterte Einstellungen (ausklappbar)
+        advanced_container = ctk.CTkFrame(main_frame, corner_radius=10)
+        advanced_container.pack(fill="x", pady=(0, 10))
+        
+        # Toggle-Header
+        toggle_frame = ctk.CTkFrame(advanced_container, fg_color="transparent")
+        toggle_frame.pack(fill="x", padx=15, pady=15)
+        
+        self.advanced_title = ctk.CTkLabel(toggle_frame, 
+                                          text="▶ Erweiterte Einstellungen", 
+                                          font=ctk.CTkFont(size=16, weight="bold"),
+                                          cursor="hand2")
+        self.advanced_title.pack(side="left")
+        self.advanced_title.bind("<Button-1>", lambda e: self.toggle_advanced())
+        
+        # Info-Label
+        self.advanced_info = ctk.CTkLabel(toggle_frame,
+                                         text="(Klick zum Aufklappen)",
+                                         font=ctk.CTkFont(size=11),
+                                         text_color="gray")
+        self.advanced_info.pack(side="left", padx=10)
+        
+        # Container für erweiterte Einstellungen (initial versteckt)
+        self.advanced_content = ctk.CTkFrame(advanced_container, fg_color="transparent")
+        
         # Scroll-Schwellwerte
-        scroll_frame = ctk.CTkFrame(main_frame, corner_radius=10)
-        scroll_frame.pack(fill="x", pady=(0, 10))
+        scroll_frame = ctk.CTkFrame(self.advanced_content, corner_radius=10, fg_color=("gray90", "gray25"))
+        scroll_frame.pack(fill="x", pady=(0, 10), padx=15)
         
         scroll_title = ctk.CTkLabel(scroll_frame, text="Scroll-Schwellwerte", 
-                                    font=ctk.CTkFont(size=16, weight="bold"))
+                                    font=ctk.CTkFont(size=14, weight="bold"))
         scroll_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
         
         # Checkbox für Scroll-Aktivierung
@@ -172,7 +199,7 @@ class SipPuffGUI:
         self.scroll_check = ctk.CTkCheckBox(scroll_frame, text="Scroll aktiviert", 
                                            variable=self.scroll_var,
                                            command=self.on_scroll_toggle,
-                                           font=ctk.CTkFont(size=13, weight="bold"),
+                                           font=ctk.CTkFont(size=12, weight="bold"),
                                            border_width=1)
         self.scroll_check.grid(row=1, column=0, columnspan=3, sticky="w", padx=15, pady=10)
         
@@ -186,11 +213,11 @@ class SipPuffGUI:
         # Spacing
         ctk.CTkLabel(scroll_frame, text="").grid(row=5, column=0, pady=5)
         
-        # Joystick-Einstellungen
-        joy_frame = ctk.CTkFrame(main_frame, corner_radius=10)
-        joy_frame.pack(fill="x", pady=(0, 10))
+        # Joystick-Schwellwerte
+        joy_frame = ctk.CTkFrame(self.advanced_content, corner_radius=10, fg_color=("gray90", "gray25"))
+        joy_frame.pack(fill="x", pady=(0, 10), padx=15)
         
-        joy_title = ctk.CTkLabel(joy_frame, text="Joystick", font=ctk.CTkFont(size=16, weight="bold"))
+        joy_title = ctk.CTkLabel(joy_frame, text="Joystick", font=ctk.CTkFont(size=14, weight="bold"))
         joy_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
         
         # Checkbox für Joystick-Aktivierung
@@ -198,8 +225,8 @@ class SipPuffGUI:
         self.joystick_check = ctk.CTkCheckBox(joy_frame, text="Joystick aktiviert", 
                                              variable=self.joystick_var,
                                              command=self.on_joystick_toggle,
-                                             font=ctk.CTkFont(size=13, weight="bold"),
-                                             border_width=1)  
+                                             font=ctk.CTkFont(size=12, weight="bold"),
+                                             border_width=1)
         self.joystick_check.grid(row=1, column=0, columnspan=3, sticky="w", padx=15, pady=10)
         
         self.create_slider(joy_frame, "Geschwindigkeit:", 'wavelength', 5, 50, 2, tooltip="Höher = schneller")
@@ -209,11 +236,10 @@ class SipPuffGUI:
         # Spacing
         ctk.CTkLabel(joy_frame, text="").grid(row=5, column=0, pady=5)
         
-        # Erweiterte Einstellungen
-        adv_frame = ctk.CTkFrame(main_frame, corner_radius=10)
-        adv_frame.pack(fill="x", pady=(0, 10))
+        adv_frame = ctk.CTkFrame(self.advanced_content, corner_radius=10, fg_color=("gray90", "gray25"))
+        adv_frame.pack(fill="x", pady=(0, 10), padx=15)
         
-        adv_title = ctk.CTkLabel(adv_frame, text="Erweitert", font=ctk.CTkFont(size=16, weight="bold"))
+        adv_title = ctk.CTkLabel(adv_frame, text="Weitere Einstellungen", font=ctk.CTkFont(size=14, weight="bold"))
         adv_title.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(15, 10))
         
         self.create_slider(adv_frame, "Debounce (ms):", 'debounce', 100, 1000, 1, tooltip="Mindestzeit zwischen Klicks")
@@ -221,7 +247,7 @@ class SipPuffGUI:
         # Spacing
         ctk.CTkLabel(adv_frame, text="").grid(row=2, column=0, pady=5)
         
-        # Log-Bereich (Dient als Serieller Monitor innerhalb der GUI)
+        # Log-Bereich
         log_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         log_frame.pack(fill="both", expand=True, pady=(0, 10))
         
@@ -236,18 +262,25 @@ class SipPuffGUI:
         action_frame.pack(fill="x", padx=20, pady=(0, 15))
         
         self.recal_btn = ctk.CTkButton(action_frame, text=f"{self.icons['sync']}  Rekalibrieren", 
-                                      command=self.recalibrate, width=180, state="disabled",
-                                      font=ctk.CTkFont(size=13))
+                                      command=self.recalibrate, width=140, state="disabled",
+                                      font=ctk.CTkFont(size=12))
         self.recal_btn.pack(side="left", padx=5)
         
-        self.save_btn = ctk.CTkButton(action_frame, text=f"{self.icons['save']}  Speichern", 
-                                     command=self.save_config, width=180,
-                                     font=ctk.CTkFont(size=13))
-        self.save_btn.pack(side="left", padx=5)
+        self.save_pc_btn = ctk.CTkButton(action_frame, text=f"{self.icons['save']}  Auf PC speichern", 
+                                     command=self.save_config, width=140,
+                                     font=ctk.CTkFont(size=12))
+        self.save_pc_btn.pack(side="left", padx=5)
+        
+        self.save_arduino_btn = ctk.CTkButton(action_frame, text=f"💾  Auf Arduino speichern", 
+                                     command=self.save_to_arduino, width=160, state="disabled",
+                                     font=ctk.CTkFont(size=12),
+                                     fg_color=("#2B8A3E", "#2B8A3E"),  # Grün
+                                     hover_color=("#237A33", "#237A33"))
+        self.save_arduino_btn.pack(side="left", padx=5)
         
         self.reset_btn = ctk.CTkButton(action_frame, text=f"{self.icons['undo']}  Standard", 
-                                      command=self.reset_to_defaults, width=180,
-                                      font=ctk.CTkFont(size=13))
+                                      command=self.reset_to_defaults, width=140,
+                                      font=ctk.CTkFont(size=12))
         self.reset_btn.pack(side="left", padx=5)
         
     def create_slider(self, parent, label, key, from_, to, row, tooltip=""):
@@ -256,7 +289,7 @@ class SipPuffGUI:
         
         value_var = ctk.IntVar(value=self.current_values[key])
         
-        # Slider
+        # Slider 
         slider = ctk.CTkSlider(parent, from_=from_, to=to, 
                               variable=value_var, width=300,
                               command=lambda v: self.on_slider_change(key, v))
@@ -278,11 +311,9 @@ class SipPuffGUI:
                     if self.connected:
                         self.send_setting(key, new_value)
                 else:
-                    # Wert außerhalb des Bereichs 
                     value_entry.delete(0, "end")
                     value_entry.insert(0, str(self.current_values[key]))
             except ValueError:
-                # Ungültige Eingabe 
                 value_entry.delete(0, "end")
                 value_entry.insert(0, str(self.current_values[key]))
         
@@ -346,6 +377,7 @@ class SipPuffGUI:
             self.status_label.configure(text="● Verbunden", text_color="green")
             self.recal_btn.configure(state="normal")
             self.pressure_test_btn.configure(state="normal")  # Drucktest aktivieren
+            self.save_arduino_btn.configure(state="normal")  # Arduino-Speicher aktivieren
             self.log(f"Verbunden mit {port}")
             
             # Starte Empfangs-Thread
@@ -371,6 +403,7 @@ class SipPuffGUI:
             self.status_label.configure(text="● Nicht verbunden", text_color="red")
             self.recal_btn.configure(state="disabled")
             self.pressure_test_btn.configure(state="disabled")  # Drucktest deaktivieren
+            self.save_arduino_btn.configure(state="disabled")  # Arduino-Speicher deaktivieren
             self.log("Verbindung getrennt")
             
     def read_serial(self):
@@ -378,7 +411,7 @@ class SipPuffGUI:
             try:
                 if self.serial_connection.in_waiting:
                     line = self.serial_connection.readline().decode('utf-8').strip()
-                    # WICHTIG
+                    # WICHTIG: Entferne auch \r explizit (Windows Line Endings)
                     line = line.replace('\r', '').replace('\n', '')
                     if line:
                         # Debug-Ausgabe nur wenn NICHT im Drucktest (zu viel Output)
@@ -401,7 +434,7 @@ class SipPuffGUI:
                     self.pressure_update_pending = True
                     self.root.after(0, self._do_pressure_update, pressure_value)
                 
-                return 
+                return  
             except ValueError:
                 pass
         
@@ -436,7 +469,6 @@ class SipPuffGUI:
         entry.delete(0, "end")
         entry.insert(0, str(value))
         
-        # Senden an Arduino
         if self.connected:
             self.send_setting(key, value)
             
@@ -508,11 +540,47 @@ class SipPuffGUI:
         try:
             with open(self.config_file, 'w') as f:
                 json.dump(self.current_values, f, indent=2)
-            self.log("✓ Einstellungen gespeichert")
-            messagebox.showinfo("Gespeichert", "Einstellungen wurden erfolgreich gespeichert!")
+            self.log("✓ Einstellungen auf PC gespeichert")
+            messagebox.showinfo("Gespeichert", "Einstellungen wurden auf dem PC gespeichert!")
         except Exception as e:
             self.log(f"Speicherfehler: {e}")
             messagebox.showerror("Fehler", f"Konnte nicht speichern: {e}")
+    
+    def save_to_arduino(self):
+        """Speichert aktuelle Einstellungen im Arduino EEPROM"""
+        if not self.connected:
+            return
+        
+        result = messagebox.askyesno(
+            "Auf Arduino speichern",
+            "Möchtest du die aktuellen Einstellungen im Arduino speichern?\n\n"
+            "Vorteil: Arduino funktioniert ohne PC/GUI\n"
+            "Die Einstellungen bleiben auch nach Neustart erhalten"
+        )
+        
+        if result:
+            try:
+                # Erst alle Einstellungen senden
+                self.sync_all_settings()
+                time.sleep(0.5)  # Warte bis alle Einstellungen übertragen sind
+                
+                # Dann im EEPROM speichern
+                self.serial_connection.write(b"SAVE_EEPROM\n")
+                self.log("💾 Speichere Einstellungen im Arduino...")
+                
+                # Warte auf Bestätigung
+                time.sleep(1)
+                
+                messagebox.showinfo(
+                    "Erfolg!", 
+                    "Einstellungen wurden im Arduino gespeichert!\n\n"
+                    "Arduino funktioniert jetzt Plug & Play\n"
+                    "Auch ohne PC/GUI"
+                )
+                
+            except Exception as e:
+                self.log(f"Fehler beim Speichern: {e}")
+                messagebox.showerror("Fehler", f"Konnte nicht im Arduino speichern: {e}")
             
     def load_config(self):
         if os.path.exists(self.config_file):
@@ -559,10 +627,24 @@ class SipPuffGUI:
             # Flag zurücksetzen - bereit für nächstes Update
             self.pressure_update_pending = False
     
+    def toggle_advanced(self):
+        """Klappt erweiterte Einstellungen ein/aus"""
+        self.advanced_expanded = not self.advanced_expanded
+        
+        if self.advanced_expanded:
+            # Aufklappen
+            self.advanced_title.configure(text="▼ Erweiterte Einstellungen")
+            self.advanced_info.configure(text="(Klick zum Zuklappen)")
+            self.advanced_content.pack(fill="x", pady=(0, 15))
+        else:
+            # Zuklappen
+            self.advanced_title.configure(text="▶ Erweiterte Einstellungen")
+            self.advanced_info.configure(text="(Klick zum Aufklappen)")
+            self.advanced_content.pack_forget()
+    
     def open_pressure_test(self):
         """Öffnet das Drucktest-Fenster"""
         if self.pressure_test_window is not None and self.pressure_test_window.winfo_exists():
-            # Fenster in den Vordergrund
             self.pressure_test_window.focus()
             return
         
@@ -573,7 +655,6 @@ class SipPuffGUI:
                 self.serial_connection.reset_output_buffer()  # Sendebuffer leeren
                 print("DEBUG: Serial Buffer geleert")
                 
-                # Kurz warten
                 time.sleep(0.1)
                 
                 # Starte Drucktest
@@ -612,7 +693,7 @@ class SipPuffGUI:
                                                    fg_color=("gray85", "gray20"))
         self.pressure_display_frame.pack(fill="both", expand=True, padx=30, pady=(0, 20))
         
-        # Druckwert-Label
+        # Großer Druckwert-Label
         self.pressure_value_label = ctk.CTkLabel(self.pressure_display_frame,
                                                  text="0",
                                                  font=ctk.CTkFont(size=80, weight="bold"))
