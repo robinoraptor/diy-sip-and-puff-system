@@ -12,12 +12,22 @@ import serial.tools.list_ports
 import threading
 import json
 import os
+import sys
 import time
 from datetime import datetime
 
+# PyInstaller-kompatible Pfad-Funktion
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
+
 # CustomTkinter Appearance
 ctk.set_appearance_mode("system")  # "light" oder "dark"
-ctk.set_default_color_theme("theme_red.json")  # Custom Red Theme
+ctk.set_default_color_theme(resource_path("theme_red.json"))  # Custom Red Theme
 
 class SipPuffGUI:
     def __init__(self, root):
@@ -29,8 +39,14 @@ class SipPuffGUI:
         # Serial-Verbindung
         self.serial_connection = None
         self.connected = False
-        self.config_file = "sippuff_config.json"
-        self.default_config_file = "sippuff_defaults.json"
+        
+        # Config-Dateien im User-Home-Verzeichnis (funktioniert auch in .app/.exe)
+        home_dir = os.path.expanduser("~")
+        config_dir = os.path.join(home_dir, ".sippuff")
+        if not os.path.exists(config_dir):
+            os.makedirs(config_dir)
+        self.config_file = os.path.join(config_dir, "sippuff_config.json")
+        self.default_config_file = os.path.join(config_dir, "sippuff_defaults.json")
         
         # Standard-Werte (werden aus JSON geladen)
         self.default_values = self.load_defaults()
@@ -53,6 +69,10 @@ class SipPuffGUI:
         
         # Erweiterte Einstellungen ausklappbar
         self.advanced_expanded = False
+        
+        # Arduino Settings empfangen
+        self.receiving_settings = False
+        self.arduino_settings = {}
         
         self.create_widgets()
         self.load_config()
@@ -384,8 +404,8 @@ class SipPuffGUI:
             self.read_thread = threading.Thread(target=self.read_serial, daemon=True)
             self.read_thread.start()
             
-            # Sende aktuelle Einstellungen
-            self.root.after(1000, self.sync_all_settings)
+            # Arduino sendet automatisch seine Settings beim Start
+            self.log("Warte auf Arduino-Einstellungen...")
             
         except Exception as e:
             messagebox.showerror("Verbindungsfehler", f"Konnte nicht verbinden: {e}")
@@ -455,7 +475,21 @@ class SipPuffGUI:
             info = msg.split(":", 1)[1]
             self.log(f"ℹ {info}")
         elif msg.startswith("SETTINGS:"):
-            pass  # Settings-Nachrichten ignorieren
+            # Arduino-Einstellungen empfangen
+            if msg == "SETTINGS:START":
+                self.receiving_settings = True
+                self.arduino_settings = {}
+            elif msg == "SETTINGS:END":
+                self.receiving_settings = False
+                self.root.after(0, self.apply_arduino_settings)
+            elif self.receiving_settings:
+                try:
+                    parts = msg.replace("SETTINGS:", "").split(":", 1)
+                    if len(parts) == 2:
+                        key, value = parts
+                        self.arduino_settings[key] = value
+                except:
+                    pass
         else:
             # Andere Nachrichten loggen
             self.log(msg)
@@ -499,7 +533,7 @@ class SipPuffGUI:
             'scroll_up': 'SCROLL_UP',       
             'scroll_down': 'SCROLL_DOWN',   
             'scroll_speed': 'SCROLL_SPEED', 
-            'scroll': 'SCROLL',             
+            'scroll': 'SCROLL',
             'wavelength': 'WAVELENGTH',
             'period': 'PERIOD',
             'deadzone': 'DEADZONE',
@@ -641,6 +675,44 @@ class SipPuffGUI:
             self.advanced_title.configure(text="▶ Erweiterte Einstellungen")
             self.advanced_info.configure(text="(Klick zum Aufklappen)")
             self.advanced_content.pack_forget()
+    
+    def apply_arduino_settings(self):
+        """Übernimmt Einstellungen vom Arduino in die GUI"""
+        key_map = {
+            'CLICK_LEFT': 'click_left',
+            'CLICK_DOUBLE': 'click_double',
+            'CLICK_RIGHT': 'click_right',
+            'SCROLL_UP': 'scroll_up',
+            'SCROLL_DOWN': 'scroll_down',
+            'SCROLL_SPEED': 'scroll_speed',
+            'SCROLL': 'scroll_enabled',
+            'WAVELENGTH': 'wavelength',
+            'PERIOD': 'period',
+            'DEADZONE': 'deadzone',
+            'DEBOUNCE': 'debounce',
+            'JOYSTICK': 'joystick_enabled'
+        }
+        
+        settings_updated = False
+        
+        for arduino_key, value_str in self.arduino_settings.items():
+            if arduino_key in key_map:
+                gui_key = key_map[arduino_key]
+                
+                try:
+                    if gui_key in ['scroll_enabled', 'joystick_enabled']:
+                        value = (value_str == '1' or value_str.upper() == 'TRUE')
+                    else:
+                        value = int(value_str)
+                    
+                    self.current_values[gui_key] = value
+                    settings_updated = True
+                except:
+                    pass
+        
+        if settings_updated:
+            self.update_ui_from_values()
+            self.log("✓ Einstellungen vom Arduino geladen")
     
     def open_pressure_test(self):
         """Öffnet das Drucktest-Fenster"""
