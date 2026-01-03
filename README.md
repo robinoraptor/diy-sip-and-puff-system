@@ -87,10 +87,12 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 ### Software
 - ✅ **Moderne GUI** mit CustomTkinter für Echtzeit-Konfiguration
 - ✅ **Live-Parameteranpassung** ohne Arduino-Neustart
-- ✅ **Persistente Einstellungen** (JSON-basiert)
+- ✅ **Persistente Einstellungen** (JSON & Arduino EEPROM)
 - ✅ **Drei Klick-Modi**: Linksklick, Doppelklick, Rechtsklick
+- ✅ **Scroll-Funktionalität** für vertikales Scrollen
 - ✅ **Adaptive Schwellwerte** (-400 bis +400)
 - ✅ **Joystick aktivierbar/deaktivierbar**
+- ✅ **Standalone Desktop-Anwendung** (.app/.exe) ohne Python-Installation
 
 ![GUI Screenshot](docs/images/gui_v2.png)
 
@@ -147,7 +149,7 @@ Reset-Button:
 
 **Software:**
 - [PlatformIO](https://platformio.org/) oder Arduino IDE
-- Python 3.7+ (für GUI)
+- Python 3.7+ (für GUI-Entwicklung, nicht für fertige Desktop-App)
 - Git (optional)
 
 ### 1. Repository klonen
@@ -172,9 +174,23 @@ pio run --target upload
 3. Port auswählen: **Tools → Port → [Dein Port]**
 4. Hochladen: **Sketch → Upload**
 
-### 3. GUI installieren
+### 3. GUI verwenden
 
-#### Automatisch (empfohlen):
+Du hast zwei Optionen:
+
+#### Option A: Fertige Desktop-Anwendung (empfohlen für Endnutzer)
+
+**Vorteil:** Keine Python-Installation nötig!
+
+1. Lade die fertige `.app` (Mac) oder `.exe` (Windows) herunter
+2. Doppelklick zum Starten
+3. Fertig! 🎉
+
+**Oder erstelle sie selbst** (siehe [Desktop-Anwendung erstellen](#desktop-anwendung-erstellen))
+
+#### Option B: Python-Version (für Entwickler)
+
+**Automatisch:**
 
 **Linux/macOS:**
 ```bash
@@ -188,12 +204,123 @@ cd gui/
 start_gui.bat
 ```
 
-#### Manuell:
+**Manuell:**
 
 ```bash
 cd gui/
 pip install -r requirements.txt
 python sippuff_gui.py
+```
+
+---
+
+## 🖥️ Desktop-Anwendung erstellen
+
+Du möchtest die GUI als **standalone .app/.exe** verteilen, ohne dass Python installiert sein muss?
+
+### Voraussetzungen
+
+```bash
+cd gui/
+pip install -r requirements.txt
+```
+
+Das installiert automatisch auch PyInstaller.
+
+### Build-Prozess
+
+#### macOS (.app):
+
+```bash
+cd gui/
+
+# Build-Script ausführbar machen (nur einmal nötig)
+chmod +x build_mac_linux.sh
+
+# Desktop-App erstellen
+./build_mac_linux.sh
+```
+
+**Ergebnis:** `dist/SipPuffController.app` (~90-130 MB)
+
+#### Windows (.exe):
+
+```cmd
+cd gui
+
+:: Desktop-App erstellen
+build_windows.bat
+```
+
+**Ergebnis:** `dist\SipPuffController.exe` (~80-120 MB)
+
+#### Linux (Binary):
+
+```bash
+cd gui/
+
+# Build-Script ausführbar machen (nur einmal nötig)
+chmod +x build_mac_linux.sh
+
+# Desktop-App erstellen
+./build_mac_linux.sh
+```
+
+**Ergebnis:** `dist/SipPuffController` (~90-130 MB)
+
+### Die fertige Anwendung
+
+Nach dem Build findest du die Anwendung in `gui/dist/`:
+
+```
+gui/
+├── dist/
+│   └── SipPuffController.app    (Mac)
+│       SipPuffController.exe    (Windows)
+│       SipPuffController        (Linux)
+└── build/                        (temporäre Dateien)
+```
+
+**Die Anwendung enthält:**
+- ✅ Python Runtime
+- ✅ Alle Bibliotheken (CustomTkinter, PySerial, etc.)
+- ✅ GUI-Code
+- ✅ Theme-Dateien
+- ✅ Komplettes System in einer Datei!
+
+### Verteilen
+
+**Einfach die .app/.exe kopieren und weitergeben!**
+
+Keine Installation nötig, einfach:
+1. Kopieren auf anderen Computer
+2. Doppelklick
+3. Arduino anschließen
+4. Fertig! 🚀
+
+### Wichtige Hinweise
+
+**macOS:**
+- Beim ersten Start: Rechtsklick → "Öffnen" (wegen Gatekeeper)
+- Oder: Systemeinstellungen → Sicherheit → "Trotzdem öffnen"
+
+**Windows:**
+- Antivirus könnte Warnung zeigen (False Positive)
+- "Weitere Informationen" → "Trotzdem ausführen"
+
+**Linux:**
+- Ausführbar machen: `chmod +x SipPuffController`
+- Dann starten: `./SipPuffController`
+
+### Build bereinigen
+
+```bash
+# Alte Builds löschen
+cd gui/
+rm -rf dist/ build/ *.spec
+
+# Neu builden
+./build_mac_linux.sh  # oder build_windows.bat
 ```
 
 ---
@@ -207,40 +334,83 @@ python sippuff_gui.py
    - ⚠️ **Wichtig:** NICHT in den Schlauch pusten/saugen während der Kalibrierung!
 
 2. **GUI starten**
-   ```bash
-   python sippuff_gui.py
-   ```
+   - Desktop-App: Doppelklick auf `.app`/`.exe`
+   - Oder: `python sippuff_gui.py`
 
 3. **Verbinden**
    - Port auswählen (z.B. COM3 oder /dev/ttyACM0)
    - "Verbinden" klicken
+   - GUI lädt automatisch die Arduino-Einstellungen
 
 4. **Einstellungen anpassen**
    - Mit Slidern experimentieren
    - Echtzeit-Feedback im Log
+   - Drucktest nutzen für optimale Schwellwerte
 
 #### Standard-Belegung:
 
 | Aktion | Eingabe | Beschreibung |
 |--------|---------|--------------|
-| **Linksklick** | Sip (Saugen) < -10 | Leichtes Ansaugen |
-| **Doppelklick** | Sip (Saugen) < -15 | Kräftiges Ansaugen |
-| **Rechtsklick** | Puff (Blasen) > 10 | Leichtes Blasen |
+| **Linksklick** | Puff (Blasen) > 10 | Leichtes Blasen |
+| **Doppelklick** | Puff (Blasen) > 15 | Kräftiges Blasen |
+| **Rechtsklick** | Sip (Saugen) < -10 | Leichtes Ansaugen |
+| **Scroll Up** | Sip (Saugen) < -5 | Sehr leichtes Ansaugen |
+| **Scroll Down** | Puff (Blasen) > 5 | Sehr leichtes Blasen |
 | **Mausbewegung** | Joystick | 2D-Bewegung in alle Richtungen |
 
 #### Anpassbare Parameter:
 
-- **Klick-Schwellwerte:** -400 bis +400
-- **Joystick-Geschwindigkeit:** 5-50
-- **Deadzone:** 0-100
-- **Update-Rate:** 10-100ms
-- **Debounce:** 100-1000ms
+**Klick-Schwellwerte:**
+- Linksklick (Puff): 0 bis 400
+- Doppelklick (Puff): 0 bis 400
+- Rechtsklick (Sip): -400 bis 0
+
+**Scroll-Schwellwerte:**
+- Scroll Up (Sip): -400 bis 0
+- Scroll Down (Puff): 0 bis 400
+- Scroll-Geschwindigkeit: 1-5
+
+**Joystick:**
+- Geschwindigkeit: 5-50
+- Update-Rate: 10-100ms
+- Deadzone: 0-100
+
+**Weitere:**
+- Debounce: 100-1000ms
+- Joystick an/aus
+- Scroll an/aus
 
 ### Einstellungen speichern
 
-- **"Speichern"** → Wird in `sippuff_config.json` gespeichert
-- **"Standard"** → Lädt Standardwerte aus `sippuff_defaults.json`
-- Beim nächsten Start werden gespeicherte Einstellungen automatisch geladen
+**Auf PC speichern:**
+- Klicke "⬇ Auf PC speichern"
+- Wird in `~/.sippuff/sippuff_config.json` gespeichert
+- Funktioniert auch in Desktop-App!
+
+**Auf Arduino speichern:**
+- Klicke "💾 Auf Arduino speichern"
+- Wird im Arduino EEPROM gespeichert
+- Arduino funktioniert jetzt **Plug & Play** - auch ohne PC!
+- Einstellungen bleiben dauerhaft erhalten
+
+**Standard wiederherstellen:**
+- Klicke "↶ Standard"
+- Lädt Standardwerte aus `sippuff_defaults.json`
+
+### Workflow: Arduino als Master
+
+Das System ist so konzipiert, dass **der Arduino die Einstellungen speichert**:
+
+```
+1. Arduino anschließen
+2. GUI öffnen → Verbinden
+3. GUI lädt automatisch Arduino-Einstellungen ✅
+4. In GUI anpassen (optional)
+5. "💾 Auf Arduino speichern" (optional)
+6. Beim nächsten Start: Arduino hat alles gespeichert!
+```
+
+**Vorteil:** Arduino funktioniert überall gleich - egal an welchem PC!
 
 ---
 
@@ -252,25 +422,35 @@ Die Empfindlichkeit kann individuell angepasst werden:
 
 ```
 Für Nutzer mit schwächerer Atemkontrolle:
-├─ Linksklick: -5
-├─ Doppelklick: -8
-└─ Rechtsklick: 5
+├─ Linksklick (Puff): 5
+├─ Doppelklick (Puff): 8
+├─ Rechtsklick (Sip): -5
+├─ Scroll Down (Puff): 3
+└─ Scroll Up (Sip): -3
 
 Für Nutzer mit stärkerer Atemkontrolle:
-├─ Linksklick: -30
-├─ Doppelklick: -50
-└─ Rechtsklick: 30
+├─ Linksklick (Puff): 30
+├─ Doppelklick (Puff): 50
+├─ Rechtsklick (Sip): -30
+├─ Scroll Down (Puff): 10
+└─ Scroll Up (Sip): -10
 ```
+
+**Tipp:** Nutze den **Drucktest** in der GUI, um deine optimalen Werte zu finden!
 
 ### Standard-Werte ändern
 
-Editiere `gui/sippuff_defaults.json`:
+Editiere `~/.sippuff/sippuff_defaults.json`:
 
 ```json
 {
-  "click_left": -10,
-  "click_double": -15,
-  "click_right": 10,
+  "click_left": 10,
+  "click_double": 15,
+  "click_right": -10,
+  "scroll_up": -5,
+  "scroll_down": 5,
+  "scroll_speed": 1,
+  "scroll_enabled": true,
   "wavelength": 15,
   "period": 35,
   "deadzone": 25,
@@ -286,17 +466,34 @@ Editiere `gui/sippuff_defaults.json`:
 ### Arduino-Firmware
 
 - **Sprache:** C++ (Arduino Framework)
-- **Bibliotheken:** `Mouse.h` (native USB-HID)
+- **Bibliotheken:** `Mouse.h` (native USB-HID), `EEPROM.h`
 - **Sampling-Rate:** 100 Hz (10ms Loop)
 - **Kalibrierung:** Automatisch beim Start (50 Samples, 1 Sekunde)
 - **Serial-Protokoll:** 115200 Baud für GUI-Kommunikation
+- **Persistenz:** EEPROM-Speicher für Plug & Play Betrieb
 
 ### GUI-Anwendung
 
 - **Framework:** CustomTkinter (moderne UI)
 - **Kommunikation:** PySerial
 - **Architektur:** Event-driven mit Threading
+- **Build-System:** PyInstaller für standalone Apps
+- **Config-Speicher:** `~/.sippuff/` (User-Home-Directory)
 - **Plattformen:** Windows, macOS, Linux
+
+### Desktop-App Details
+
+**PyInstaller-Build:**
+- `--onefile`: Einzelne ausführbare Datei
+- `--windowed`: Keine Konsole (nur GUI)
+- `--add-data`: Theme-Dateien eingebettet
+- Alle Abhängigkeiten inkludiert
+- Keine Python-Installation erforderlich
+
+**Dateigröße:**
+- Mac: ~90-130 MB (.app Bundle)
+- Windows: ~80-120 MB (.exe)
+- Linux: ~90-130 MB (Binary)
 
 ---
 
@@ -347,5 +544,29 @@ https://doi.org/10.1080/07370024.2020.1724790
 Entwickelt im Rahmen eines Human Factors Projekts an der **Hochschule Furtwangen University (HFU)**.
 
 **Fakultät:** Engineering Technology  
-**Studiengang:** Human Factors 
-**Semester:** 2. Semester  
+**Studiengang:** Human Factors  
+**Semester:** 2. Semester
+
+---
+
+## 📄 Lizenz
+
+Dieses Projekt steht unter der MIT-Lizenz - siehe [LICENSE](LICENSE) für Details.
+
+---
+
+## 🤝 Beitragen
+
+Contributions sind willkommen! Bitte öffne ein Issue oder Pull Request auf GitHub.
+
+---
+
+## 📧 Kontakt
+
+Bei Fragen oder Anregungen:
+- GitHub Issues: [github.com/robinoraptor/sip-puff-controller/issues](https://github.com/robinoraptor/sip-puff-controller/issues)
+- Email: [Deine Email]
+
+---
+
+**Entwickelt mit ❤️ für mehr Barrierefreiheit**
