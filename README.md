@@ -80,7 +80,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 - Begrenzung der Bakterienbildung essentiell
 
 ### Version 3.0 - Polished Prototype
-![GUI v2.0](docs/images/gui_v2_collapsed.png)
+![GUI v2.0](docs/images/gui_v3_collapsed.png)
 ![Prototyp v3.0 a](docs/images/prototype_v3_a.png)
 ![Prototyp v3.0 b](docs/images/prototype_v3_b.png)
 
