@@ -198,19 +198,7 @@ pio run --target upload
 
 ### 3. GUI verwenden
 
-Du hast zwei Optionen:
-
-#### Option A: Fertige Desktop-Anwendung (empfohlen für Endnutzer)
-
-**Vorteil:** Keine Python-Installation nötig!
-
-1. Lade die fertige `.app` (Mac) oder `.exe` (Windows) herunter
-2. Doppelklick zum Starten
-3. Fertig! 🎉
-
-**Oder erstelle sie selbst** (siehe [Desktop-Anwendung erstellen](#desktop-anwendung-erstellen))
-
-#### Option B: Python-Version (für Entwickler)
+#### Python-Version (für Entwickler)
 
 **Automatisch:**
 
