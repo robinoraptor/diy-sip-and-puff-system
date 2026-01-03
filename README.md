@@ -116,7 +116,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 - ✅ **Joystick aktivierbar/deaktivierbar**
 - ✅ **Standalone Desktop-Anwendung** (.app/.exe) ohne Python-Installation
 
-![GUI Screenshot](docs/images/gui_v2_collapsed.png)
+![GUI Screenshot](docs/images/gui_v3_collapsed.png)
 
 ---
 
