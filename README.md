@@ -62,17 +62,39 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 - Geschwindigkeitsanpassung wichtig
 
 ### Version 2.0 - GUI-gesteuert
-![Prototyp v3.0](docs/images/gui_v1.png)
+![GUI v1.0](docs/images/gui_v1.png)
+![Prototyp v2.0 a](docs/images/prototype_v2_a.png)
+![Prototyp v2.0 b](docs/images/prototype_v2_b.png)
 
 **Features:**
-- Ersze vollständige GUI-Integration
+- Erste vollständige GUI-Integration
 - Echtzeit-Parameteranpassung
 - Persistente Einstellungen
 - Moderne CustomTkinter-UI
+- Breiteres Mundstück
+- Erweiterung des Mundstücks um Luer-Lock-Adapter um optinalen PTFE-Atemfilter hinzuzufügen
 
 **Erkenntnisse:**
 - Live-Anpassung drastisch verbessert Nutzbarkeit
 - Individuelle Profile essentiell
+- Begrenzung der Bakterienbildung essentiell
+
+### Version 3.0 - Polished Prototype
+![GUI v2.0](docs/images/gui_v2_collapsed.png)
+![Prototyp v3.0 a](docs/images/prototype_v3_a.png)
+![Prototyp v3.0 b](docs/images/prototype_v3_b.png)
+
+**Features:**
+- Überarbeitete GUI für übersichtlichere Bedienung
+- Exportieren der GUI als eigenständige Desktop-Anwendung möglich
+- Speichern der Einstellungen auf dem Gerät selbst (Plug & Play)
+- Schlichtes und modernes Gehäuse für die Technik
+- Einfaches Austuschen der Gelenkarmverbindung
+
+**Erkenntnisse:**
+- Speichern auf Gerät erhöht Plug & Play Charakter drastisch
+- Überdecken von verbauten LEDs verhindern mögliche Ablenkungen
+- Austauschbarkeit der Armverbingung trägt zur erhöhter Unabhängigkeit bei
 
 ---
 
@@ -94,7 +116,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 - ✅ **Joystick aktivierbar/deaktivierbar**
 - ✅ **Standalone Desktop-Anwendung** (.app/.exe) ohne Python-Installation
 
-![GUI Screenshot](docs/images/gui_v2.png)
+![GUI Screenshot](docs/images/gui_v2_collapsed.png)
 
 ---
 
