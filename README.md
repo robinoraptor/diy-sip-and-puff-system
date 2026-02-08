@@ -2,7 +2,7 @@
 
 > Ein adaptives Eingabesystem für Menschen mit eingeschränkter Fingermotorik
 
-![System Overview](docs/images/prototype_v1_a.png)
+![Prototyp v3.0 b](docs/images/prototype_v3_b.png)
 
 ---
 
@@ -88,6 +88,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 - Überarbeitete GUI für übersichtlichere Bedienung
 - Exportieren der GUI als eigenständige Desktop-Anwendung möglich
 - Speichern der Einstellungen auf dem Gerät selbst (Plug & Play)
+- Überarbeitung der Scroll-Funktionalität durch Mappen auf Joyatick-Bewegungen
 - Schlichtes und modernes Gehäuse für die Technik
 - Einfaches Austuschen der Gelenkarmverbindung
 
@@ -102,7 +103,7 @@ Die Entwicklung erfolgte iterativ in mehreren Prototyp-Versionen:
 
 ### Hardware
 - ✅ **MPXV7002DP Drucksensor** für bidirektionale Druckmessung (Saugen/Blasen)
-- ✅ **Analoger Joystick** für präzise 2D-Mausbewegung
+- ✅ **Analoger Joystick** für präzise 2D-Mausbewegung oder Scrollen
 - ✅ **Arduino Pro Micro** als USB-HID-Gerät (native Mausfunktion)
 - ✅ **Modularer Aufbau** für einfache Anpassungen
 
@@ -153,7 +154,7 @@ Joystick:
 ├─ VRx  → A2 (Analog)
 └─ VRy  → A1 (Analog)
 
-Reset-Button:
+Optionaler Reset-Button (Für Debugging):
 ├─ Pin 1 → GND
 └─ Pin 2 → RST
 ```
@@ -364,8 +365,8 @@ rm -rf dist/ build/ *.spec
 | **Linksklick** | Puff (Blasen) > 10 | Leichtes Blasen |
 | **Doppelklick** | Puff (Blasen) > 15 | Kräftiges Blasen |
 | **Rechtsklick** | Sip (Saugen) < -10 | Leichtes Ansaugen |
-| **Scroll Up** | Sip (Saugen) < -5 | Sehr leichtes Ansaugen |
-| **Scroll Down** | Puff (Blasen) > 5 | Sehr leichtes Blasen |
+| **Scroll Up** | Joystick | horizontale Bewegung nach Links |
+| **Scroll Down** | Joystick | horizontale Bewegung nach Rechts |
 | **Mausbewegung** | Joystick | 2D-Bewegung in alle Richtungen |
 
 #### Anpassbare Parameter:
@@ -374,11 +375,6 @@ rm -rf dist/ build/ *.spec
 - Linksklick (Puff): 0 bis 400
 - Doppelklick (Puff): 0 bis 400
 - Rechtsklick (Sip): -400 bis 0
-
-**Scroll-Schwellwerte:**
-- Scroll Up (Sip): -400 bis 0
-- Scroll Down (Puff): 0 bis 400
-- Scroll-Geschwindigkeit: 1-5
 
 **Joystick:**
 - Geschwindigkeit: 5-50
@@ -575,8 +571,7 @@ Contributions sind willkommen! Bitte öffne ein Issue oder Pull Request auf GitH
 
 Bei Fragen oder Anregungen:
 - GitHub Issues: [github.com/robinoraptor/sip-puff-controller/issues](https://github.com/robinoraptor/sip-puff-controller/issues)
-- Email: [Deine Email]
 
 ---
 
-**Entwickelt mit ❤️ für mehr Barrierefreiheit**
+**Entwickelt mit ❤️ für Assistive Technology**
