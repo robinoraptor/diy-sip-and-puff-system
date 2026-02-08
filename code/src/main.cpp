@@ -1,9 +1,4 @@
-/*
- * Sip and Puff Mouse Controller with GUI Configuration
- * Arduino Pro Micro mit MPXV7002DP Drucksensor + Joystick
- *
- * Steuerung über Serial-Kommandos für Echtzeit-Parameteränderung
- */
+// Sip and Puff Mouse Controller with GUI Configuration
 
 #include <Mouse.h>
 #include <EEPROM.h>
@@ -34,13 +29,13 @@ unsigned long clickDebounce = 500; // 500ms zwischen Klicks
 
 // Joystick-Einstellungen (über Serial änderbar)
 const int JOY_CENTER = 512; // Mittelposition des Joysticks
-int joyDeadzone = 25;       // Deadzone um Mittelposition
+int joyDeadzone = 10;       // Deadzone um Mittelposition
 int wavelength = 15;        // Geschwindigkeit in Pixel pro Iteration
 int period = 35;            // Update-Intervall in MS
 unsigned long cursorFrequencyTimer = 0;
 
 // Joystick-Aktivierung
-bool joystickEnabled = true;
+bool joystickEnabled = false;
 
 // Status-LED
 const int LED_PIN = LED_BUILTIN_TX;
@@ -244,25 +239,17 @@ void handleClicks(int pressureDiff)
 
 void handleScrolling(int pressureDiff)
 {
-  // Scroll nur wenn kein Klick gerade passiert ist (Debounce-Zeit)
-  unsigned long currentTime = millis();
-  if (currentTime - lastClickTime < clickDebounce)
+  // Um Scroll-Richtung zu ändern Mouse.move(0, 0, -1) und Mouse.move(0, 0, 1) tauschen
+  int joyX = analogRead(JOY_X_PIN);
+  if (joyX < JOY_CENTER - joyDeadzone)
   {
-    return;
+    delay(80);
+    Mouse.move(0, 0, -1);
   }
-
-  // Scroll nach oben (leichtes Saugen)
-  // Bereich: scrollUp bis clickRight (z.B. -5 bis -10)
-  if (pressureDiff < scrollUp && pressureDiff >= clickRight)
+  else if (joyX > JOY_CENTER + joyDeadzone)
   {
-    Mouse.move(0, 0, scrollSpeed); // Positiv = scroll up
-  }
-
-  // Scroll nach unten (leichtes Pusten)
-  // Bereich: scrollDown bis clickLeft (z.B. +5 bis +10)
-  else if (pressureDiff > scrollDown && pressureDiff <= clickLeft)
-  {
-    Mouse.move(0, 0, -scrollSpeed); // Negativ = scroll down
+    delay(80);
+    Mouse.move(0, 0, 1);
   }
 }
 

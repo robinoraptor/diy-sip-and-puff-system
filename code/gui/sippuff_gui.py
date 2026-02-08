@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-Sip & Puff Mouse Controller - GUI Configuration Tool
-Echtzeit-Parameteranpassung über Serial-Verbindung
-Modern UI mit CustomTkinter und Unicode-Symbolen
-"""
+# Sip & Puff Mouse Controller - GUI Configuration Tool
 
 import customtkinter as ctk
 from tkinter import messagebox
@@ -33,8 +29,8 @@ class SipPuffGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Sip & Puff Controller - Einstellungen")
-        self.root.geometry("650x850")
-        self.root.resizable(False, True)
+        self.root.geometry("660x850")
+        self.root.resizable(True, True)
         
         # Serial-Verbindung
         self.serial_connection = None
