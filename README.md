@@ -8,7 +8,7 @@
 
 ## 📖 Über das Projekt
 
-Dieses Projekt entstand im Rahmen eines **Human Factors (HF) Projekts** an der **Hochschule Furtwangen** und verfolgt die Fragestellung:
+Dieses Projekt entstand im Rahmen eines **Human Factors (HF) Projekts** in Kooperation mit der **Hochschule Furtwangen** und **Musiklusion** (https://www.musiklusion.de/mundmaus/) und verfolgt die Fragestellung:
 
 > **"Wie können durch eine Assistenzlösung zusätzliche, intuitiv nutzbare Freiheitsgrade geschaffen werden, die Menschen mit eingeschränkter Fingermotorik das selbstständige Ausführen der Maussteuerung ermöglichen?"**
 
